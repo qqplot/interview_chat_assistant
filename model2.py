@@ -557,3 +557,5 @@ if __name__ == '__main__':
     print('\n### STEP3 return check makeQforFront : consider section / 2 question per section')
     for i in result3 :
         print(i)
+
+    ## add 및 push test
