@@ -1,12 +1,18 @@
 # README
 
 ## TODO
-* requirements.txt 추가 예정
+* None
 
 ## Middle-End
+* 환경 설정
+    - `conda create -n p4ds_grp5 python=3.10`
+    - `conda activate p4ds_grp5`
+    - `pip install -r requirements.txt`
 * 구동 방법
     - `python main.py`
-    - Flask 서버 구동 확인 후, http://127.0.0.1:5000 접속
+    - Flask 서버 구동 확인 후, http://127.0.0.1:5000 접속(Swagger)
+* 최초 구동 시, `sentence-transformers` 및 pre-trained model 다운로드에 2 ~ 3분 소요
+
 ## Git 주요 절차 개념 설명
 * 모든 작업은 본 repo로부터 최소한 한번의 `git clone`이 된 local directory에서 수행합니다.
 * local directory에서 작업을 하기 전 반드시 `git pull`을 실행하여 remote repo의 최신 형상(버전)을 받아 오도록 합니다.
