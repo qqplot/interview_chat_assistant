@@ -534,8 +534,9 @@ class Model2:
         if len(self.picked_q_history) ==0 or len(self.answer_history) ==0 : 
             raise ValueError('There is no question history or answer history')
         df = pd.DataFrame(self.q_initial_scored)
-        q_row = df[ df['question'] == self.picked_q_history[-1] ]
-        result = {'question' : self.picked_q_history[-1], 'tag_lv0' : q_row['tag_lv0'].item(), 'tag_lv1' : q_row['tag_lv1'].item(), 'answer' : self.answer_history[-1] }
+        q_row = df[ df['question'] == self.picked_q_history[-1] ].iloc[0,:]
+        # result = {'question' : self.picked_q_history[-1], 'tag_lv0' : q_row['tag_lv0'].item(), 'tag_lv1' : q_row['tag_lv1'].item(), 'answer' : self.answer_history[-1] }
+        result = {'question' : self.picked_q_history[-1], 'tag_lv0' : q_row['tag_lv0'], 'tag_lv1' : q_row['tag_lv1'], 'answer' : self.answer_history[-1] }
         self.provide_history_with_m3.append(result) # 제공 내역 기록해두기
         return result
 
@@ -708,6 +709,7 @@ class Model2:
         # (STEP4) interviewer가 follow-up q를 요청
         if (params['tx'] == 'request_for_followup_q'):
             print('\n[ (STEP4) request_for_followup_q starts ]')
+            self.set_follow_up_q_mode()
             print('\n----------- (STEP4) ends with returns ------------\n')
             return self.provide_latest_qa_to_m3()
 
