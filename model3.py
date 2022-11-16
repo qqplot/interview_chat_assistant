@@ -55,7 +55,7 @@ class Model3:
             print(self.get_Q_keywords(self.question))
             print('-------   done   -------\n')
 
-        
+        # interviewee의 answer
         if (params['tx'] == 'answerq'):
             print('\n [ (STEP2) Answer is accepted ]')
             self.receive_ans(self.example_answer_info) # example로 구현함
@@ -67,30 +67,28 @@ class Model3:
             print('>> Use previous question tags')
             self.recent_qa_from_model2(self.question_ans) 
             print('-------   done   -------\n') 
-
+            
+            print('>> Return 3 suggested question for the technical tag')
             if self.tag_lv0 == 'technical':
                 for idx, Q in enumerate(self.tech_question):
-                    print(idx+1,'.0,' Q)   
-            
-            print('>> Get ranking keywords')
-            self.get_rank(self.key_list)
-            print('-------   done   -------\n') 
+                    print(idx+1,'.', Q)  
+                print('-------   done   -------\n') 
 
-            print('>> Return 3 suggested question')
-            if len(self.rank) > 3:
-                for i, pair in enumerate(self.rank):
-                    if i < 3:
-                        idx = pair[0]
-                        print(i+1,'.', self.question[idx])
-                    else:
-                        break
-            print('-------   done   -------\n')
+            else:
+                print('>> Get ranking keywords')
+                self.get_rank(self.key_list)
+                print('-------   done   -------\n') 
 
+                print('>> Return 3 suggested question')
+                if len(self.rank) > 3:
+                    for i, pair in enumerate(self.rank):
+                        if i < 3:
+                            idx = pair[0]
+                            print(i+1,'.', self.question[idx])
+                        else:
+                            break
+                print('-------   done   -------\n')
 
-
-
-
-            # return pd.Series(params['txt']).str.upper().to_dict()
 
     def __del__(self):
         pass
