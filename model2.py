@@ -3,13 +3,15 @@ import numpy as np
 import pandas as pd
 from sentence_transformers import SentenceTransformer  #sentence_transformers 설치 필요
 
+PRIORITYSCORE = 100000 #cvjd base question을 상단에 올리는 데에 사용됨(score에 가산)
+
 
 class Model2:
 
     def __init__(self) :
         '''
         Args:
-            - qlist(dict) : question list from model 1
+            - qlist(dict) : question list from question bank
                     - format :  {'init_qlist' : [
                         {'section' : 'experience',
                         'question' : 'What was the most difficult project you have done?',
@@ -28,8 +30,8 @@ class Model2:
         ######## sample data section  ########
         ######################################
 
-        # init argument : 모델1로부터 받은 question 전체(dict)
-        self.exampleQlist = { 'qlist_from_m1' : 
+        # init argument : question bank 전체(dict)
+        self.example_q_from_bank = { 'qfrombank' : 
                             [ {'section' : 'experience',
                             'question' : 'What was the most difficult project you have done?',
                             'tag_lv0' : 'general',
@@ -56,6 +58,24 @@ class Model2:
                             'tag_lv1' : 'machineLearning'}
                             ] 
                             }
+
+        # init argument : cv, jd based question(dict) from model1
+        self.example_q_from_cvjd = { 'qfromcvjd' : 
+                            [ {'section' : 'knowledge',
+                            'question' : 'You don\'t seem to have dealt with the lower language like C++ much. We need someone who can use the C++ language, do you know how to use the C++ language?',
+                            'tag_lv0' : 'cvjd_based',
+                            'tag_lv1' : 'skill'},
+                            {'section' : 'experience',
+                            'question' : 'You only listed projects in school classes. Have you ever done any projects outside of classes?',
+                            'tag_lv0' : 'cvjd_based',
+                            'tag_lv1' : 'experience'},
+                            {'section' : 'experties',
+                            'question' : 'You said you have studied reinforcement learning. What areas did you research in detail?',
+                            'tag_lv0' : 'cvjd_based',
+                            'tag_lv1' : 'experties'}
+                            ] 
+                            }
+
         # (initial info) 면접평가표의 평가문항(optional한 부분이나 시나리오를 위해 필요할 것으로 생각됨)
         self.exampleSection = ['knowledge', 'experties', 'experience', 'relationship']
         # (initial info) 최초 context 계산 등에 필요한 cv, jd 정보 (format은 아래를 가정함)
@@ -75,15 +95,19 @@ class Model2:
                         'info' : {'flag' : 1, 'answer' : 'It was the matrix multiplication parallel project with MPI. It was challenging to me'} }
 
 
+        # (interaction) question from model3 정보
+        self.example_q_from_m3 = { 'qfromm3' :  [{'section' : 'experience',
+                                                'question' : 'Think back to a data project you have worked on where you encountered a problem or challenge. What was the situation, what was the obstacle, and how did you overcome it?'}]}
+
         ####################################################
         ######## initial argument variable section  ########
         ####################################################
 
         ### init argument variables section starts--------------------------------------
-        self.originQlist = {} #from question bank or else
+        self.q_from_bank = {} #from question bank or else
         '''
-        - question list from model 1
-        - format(dictionary) :  {'qlist_from_m1' : [
+        - question list from question bank
+        - format(dictionary) :  {'qfrombank' : [
             {'section' : 'experience',
             'question' : 'What was the most difficult project you have done?',
             'tag_lv0' : 'general',
@@ -94,6 +118,8 @@ class Model2:
             'tag_lv1' : 'machineLearning'},... 
             ] }
         '''
+        self.q_from_cvjd = {} #cv, jd specific questions from model1 (priority!)
+        self.q_from_m3 = {} #follow up question 담아둘 곳
         self.section = [] #평가항목
         self.info_cv = [] #cv 정보
         self.info_jd = [] #jd 정보
@@ -169,8 +195,9 @@ class Model2:
 
 
     # 초기 자료입력 셋팅 method 
-    def set_initial_state(self, originQlist : dict, section : list, info_cv : list, info_jd : list) :
-        self.originQlist = originQlist
+    def set_initial_state(self, q_from_bank : dict, q_from_cvjd : dict, section : list, info_cv : list, info_jd : list) :
+        self.q_from_bank = q_from_bank
+        self.q_from_cvjd = q_from_cvjd
         self.section = section
         self.info_cv = info_cv
         self.info_jd = info_jd
@@ -222,8 +249,8 @@ class Model2:
         - 기능 : Score the importance of each question from Model1 
                 and store it in self.q_initial_scored
         - class variables used in this function
-            - self.originQlist(dict) : question list from model 1
-                - format (dictionary) : { 'qlist_from_m1' : 
+            - self.q_from_bank(dict) : question list from question bank
+                - format (dictionary) : { 'qfrombank' : 
                     [ {'section' : 'experience',
                        'question' : 'What was the most difficult project you have done?',
                        'tag_lv0' : 'general',
@@ -250,20 +277,23 @@ class Model2:
                     ] 
         '''
         print('>> q_initial_scoring start...')
-        # convert qlist from Model1(dict) into DataFrame
-        df = pd.DataFrame(self.originQlist[ next(iter(self.originQlist.keys())) ])
-
+        # convert q_from_bank and q_from_cvjd(dict) into DataFrame
+        df_bank = pd.DataFrame(self.q_from_bank[ next(iter(self.q_from_bank.keys())) ])
+        df_cvjd = pd.DataFrame(self.q_from_cvjd[ next(iter(self.q_from_cvjd.keys())) ])
         # add column for score 
-        df = df.reindex(columns = df.columns.tolist() + ['score'])
+        df_bank = df_bank.reindex(columns = df_bank.columns.tolist() + ['score'])
+        df_cvjd = df_cvjd.reindex(columns = df_cvjd.columns.tolist() + ['score'])
         
         # output('question_embedding') : numpy array with shape = (# of questions, length of each vector = 384)
-        question_embedding = self.embed_model.encode(df['question'].tolist()) 
+        question_embedding_bank = self.embed_model.encode(df_bank['question'].tolist()) 
+        question_embedding_cvjd = self.embed_model.encode(df_cvjd['question'].tolist()) 
 
         # score 
-        df['score'] = self.score_q_by_context(question_embedding) 
+        df_bank['score'] = self.score_q_by_context(question_embedding_bank) 
+        df_cvjd['score'] = self.score_q_by_context(question_embedding_cvjd) + PRIORITYSCORE # considering priority
 
         # set the q_initial_scored
-        self.q_initial_scored = df.to_dict(orient='records')
+        self.q_initial_scored = df_bank.to_dict(orient='records') + df_cvjd.to_dict(orient='records')
         self.q_remaining = self.q_initial_scored
         print('-------   done   -------\n')
 
@@ -401,12 +431,22 @@ class Model2:
         score_updated = self.score_q_by_context(self.embed_model.encode( pd.DataFrame(self.get_q_remaining()).question ))
         df = pd.DataFrame(self.get_q_remaining())
         df.score = score_updated
+        #cvj based q는 Priorityscore 계속 더해주기
+        for i in range(len(df.score)) :
+            if df['tag_lv0'][i] == 'cvjd_based':
+                df.score[i] += PRIORITYSCORE
         self.q_remaining = df.to_dict(orient='records')
 
 
     '''
     ※추가 구현해야할 사항 
-    - follow up question받아오기
+    - cv jd specific question을 어떻게 다룰지 셋팅(최상단 위치 등)
+    - follow up question받아오는 logic
+    - Question section설정
+    - time에 따른 문항수 setting
+    - 모델 정교화(context화 방법 등 고민)
+    - 사용할 data 정교화
+    
     '''
 
     def get(self, params):
@@ -421,8 +461,8 @@ class Model2:
             print('\n[ (STEP1) set_initial_with_example starts ]')
 
             # 초기값 셋팅
-            self.set_initial_state (originQlist=self.exampleQlist, section=self.exampleSection, 
-                                    info_cv=self.example_info_cv, info_jd=self.example_info_jd)
+            self.set_initial_state (q_from_bank=self.example_q_from_bank, q_from_cvjd=self.example_q_from_cvjd,
+                                    section=self.exampleSection, info_cv=self.example_info_cv, info_jd=self.example_info_jd)
 
             # initial context 계산(cv, jd 정보 이용)
             self.set_initial_context()
@@ -558,4 +598,4 @@ if __name__ == '__main__':
     for i in result3 :
         print(i)
 
-    ## add 및 push test
+    
