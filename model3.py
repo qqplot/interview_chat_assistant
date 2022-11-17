@@ -14,12 +14,14 @@ class Model3:
         # self.model2 = Model2()
         self.db_path = './model3/model3.db'
         self.key_dict = {}
+        self.cnt = {}
         self.key_list = []
         self.model = SentenceTransformer('distilbert-base-nli-mean-tokens')
         self.ans = ''
         self.tag_lv0 = ''
         self.tag_lv1 = ''
         self.rank = []
+        self.Q = []
      
 
         #example answer
@@ -58,6 +60,10 @@ class Model3:
         # interviewee의 answer
         if (params['tx'] == 'answerq'):
             print('\n [ (STEP2) Answer is accepted ]')
+            '''
+            여기서 followup 할 답변을 받아야 합니다!
+            '''
+            # self.receive_ans(params['answer'])
             self.receive_ans(self.example_answer_info) # example로 구현함
 
             print('>> Check answer')
@@ -65,6 +71,11 @@ class Model3:
             print('-------   done   -------\n')  
 
             print('>> Use previous question tags')
+            '''
+            여기서 model2에 있는 이전 질문의 테그들을 받아야 합니다!
+            type은 sample 처럼 dict로 생각했습니다!
+            '''
+            # self.recent_qa_from_model2(params['QandA'])
             self.recent_qa_from_model2(self.question_ans) 
             print('-------   done   -------\n') 
             
@@ -84,9 +95,17 @@ class Model3:
                     for i, pair in enumerate(self.rank):
                         if i < 3:
                             idx = pair[0]
+                            # print('question: ', self.Q)
+                            # print('key_dict: ', self.key_dict)
+                            # print('key list: ', self.key_list)
+                            # print('cnt: ', self.cnt)
+                            # print('rank: ', self.rank)
+                            # print('idx: ', idx)
                             print(i+1,'.', self.question[idx])
                         else:
                             break
+                else:
+                    print(i+1,'.', self.question[idx])
                 print('-------   done   -------\n')
 
 
@@ -159,35 +178,41 @@ class Model3:
                 distances[idx] = distance
             
             keywords = [candidates[index] for index in distances.argsort()[-top_n:]]
-            self.key_list.append(keywords)
             self.key_dict[i+1] = keywords
-            key_list = self.key_list
+            
+        for val in self.key_dict.values():
+            self.key_list.append(val)
+            
+        key_list = self.key_list
+        print('key list length 원본: ', len(self.key_list))
+        print('__________________________')
         return key_list
     
     def get_rank(self, key_list):
-        cnt = {}
-        for idx, box in enumerate(key_list):
+        for index, box in enumerate(key_list):
             for key in box:
                 if key in self.ans:
-                    if idx not in cnt:
-                        cnt[idx] = 1
+                    if index not in self.cnt:
+                        self.cnt[index] = 1
                     else: 
-                        cnt[idx] += 1
+                        self.cnt[index] += 1
         # Model2에서 받아 올 tags, 전 question 사용
-        for idx, box in enumerate(key_list):
+        for ix, box in enumerate(key_list):
             if self.tag_lv0 in box:
-                if idx not in cnt:
-                    cnt[idx] = 1
+                if ix not in self.cnt:
+                    self.cnt[ix] = 1
                 else:
-                    cnt[idx] += 1
+                    self.cnt[ix] += 1
             if self.tag_lv1 in box:
-                if idx not in cnt:
-                    cnt[idx] = 1
+                if ix not in self.cnt:
+                    self.cnt[ix] = 1
                 else:
-                    cnt[idx] += 1          
-
-        cnt.items()
-        self.rank = sorted(cnt.items(), key=lambda x: x[1], reverse = True)
+                    self.cnt[ix] += 1          
+        # print('count_dict: ', self.cnt)
+        print('list lenght: ', len(self.key_list))
+        print('_________________________________')
+        self.cnt.items()
+        self.rank = sorted(self.cnt.items(), key=lambda x: x[1], reverse = True)
         rank = self.rank
         return rank
        
