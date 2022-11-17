@@ -35,7 +35,7 @@ model3 = Model3()
 STATE = {}
 
 parser_get_question = api.parser()
-parser_get_question.add_argument('cnt', type=int, help='how many questions do you need?', default=3)
+parser_get_question.add_argument('cnt', type=int, help='(not working yet) how many questions do you need?', default=3)
 parser_get_question.add_argument('question_prev', type=str, help='what question is picked by the interviewer previously?')
 parser_get_question.add_argument('answer_prev', type=str, help='what answer is given by the interviewee previously?')
 parser_get_question.add_argument('interview_id', type=str, help='unique identifier for a single interview', required=True, default='DS001')

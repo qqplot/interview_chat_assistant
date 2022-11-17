@@ -4,14 +4,14 @@ import numpy as np
 import torch
 import sqlite3
 from sentence_transformers import SentenceTransformer
-from model1 import Model1
-from model2 import Model2
+# from model1 import Model1
+# from model2 import Model2
 from sklearn.feature_extraction.text import CountVectorizer
 
 class Model3:
     def __init__(self):
-        self.model1 = Model1()
-        self.model2 = Model2()
+        # self.model1 = Model1()
+        # self.model2 = Model2()
         self.db_path = './model3/model3.db'
         self.key_dict = {}
         self.key_list = []
@@ -35,11 +35,11 @@ class Model3:
         if type(params) != dict:
             return {'message': 'params must be dict'}
 
-        if (params['tx'] == 'get_raw_text_upper'):
-            res = self.model1.get({'tx': 'get_raw_data'})
-            inp = [v['text'] for k, v in res.items()]
-            out = self.model2.get({'tx': 'get_upper', 'txt': inp})
-            return out
+        # if (params['tx'] == 'get_raw_text_upper'):
+        #     res = self.model1.get({'tx': 'get_raw_data'})
+        #     inp = [v['text'] for k, v in res.items()]
+        #     out = self.model2.get({'tx': 'get_upper', 'txt': inp})
+        #     return out
 
         #user가 follow up 선택
         if (params['tx'] == 'follow'):
@@ -106,7 +106,7 @@ class Model3:
 
         cur.execute("SELECT * FROM followup")
         rows = cur.fetchall()
-        cols = [column[0] for column in cur.descriptoin]
+        cols = [column[0] for column in cur.description]
 
         self.df = pd.DataFrame.from_records(data=rows, columns=cols)
         df = self.df
@@ -203,7 +203,7 @@ class Model3:
         if answer_info['from'] != 'interviewee' :
             raise ValueError('Error raised in receive_answer ftn.')
         else :
-            self.ans = answer_info['answer']
+            self.ans = answer_info['info']['answer']
 
     def recent_qa_from_model2(self, question_ans : dict):
         self.tag_lv0 = question_ans['tag_lv0']
@@ -211,6 +211,10 @@ class Model3:
 
 if __name__ == '__main__':
     model3 = Model3()
-    print(model3.get({'tx': 'get_raw_text_upper'}))
-    
-    
+    # print(model3.get({'tx': 'get_raw_text_upper'}))
+
+    print('----- tx: follow -----')
+    print(model3.get(params={'tx': 'follow'}))
+
+    print('----- tx: answerq -----')
+    print(model3.get(params={'tx': 'answerq'}))
