@@ -53,3 +53,7 @@ Thumbs.db
 
 # Python
 __pycache__
+
+# Macos
+.idea
+.DS_Store
