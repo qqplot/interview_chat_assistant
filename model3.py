@@ -53,7 +53,7 @@ class Model3:
 
             # keywords list check
             print('>> Question keywords list')
-            self.get_Q_keywords(self.question)
+            # self.get_Q_keywords(self.question)
             print(self.get_Q_keywords(self.question))
             print('-------   done   -------\n')
 
@@ -84,6 +84,7 @@ class Model3:
                 for idx, Q in enumerate(self.tech_question):
                     print(idx+1,'.', Q)  
                 print('-------   done   -------\n') 
+                return None
 
             else:
                 print('>> Get ranking keywords')
@@ -91,6 +92,7 @@ class Model3:
                 print('-------   done   -------\n') 
 
                 print('>> Return 3 suggested question')
+                ret = []
                 if len(self.rank) > 3:
                     for i, pair in enumerate(self.rank):
                         if i < 3:
@@ -102,11 +104,14 @@ class Model3:
                             # print('rank: ', self.rank)
                             # print('idx: ', idx)
                             print(i+1,'.', self.question[idx])
+                            ret.append(self.question[idx])
                         else:
                             break
                 else:
                     print(i+1,'.', self.question[idx])
+                    ret.append(self.question[idx])
                 print('-------   done   -------\n')
+                return ret
 
 
     def __del__(self):
