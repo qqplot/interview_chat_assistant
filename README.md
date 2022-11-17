@@ -47,3 +47,18 @@
         - `git push origin master`
 * 협업 개발 시 형상 버전 충돌이 수시로 일어나고 매번 해결해야 하므로, `git pull`을 자주 실행해 주는 것이 좋은 습관임. 그리고, `git commit` 전에 `git pull`을 한번씩 해 주는 것도 좋은 습관임.
 * local directory와 remote repo 간 형상 버전 충돌이 끝까지 해결되지 않을 때는 architect와 상의 바람.
+
+
+# Frond-End 서버 구동
+
+Node.js 설치 후에 진행바랍니다.
+`node -v` 로 확인하면 됩니다.
+
+
+```sh
+cd front
+npm i
+```
+
+패키지 설치 후에 `npm run dev`
+
