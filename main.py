@@ -1,8 +1,5 @@
 from flask import Flask
-from flask_restx import Api, Resource, fields
-
-# import sys
-# sys.path.append('..')
+from flask_restx import Api, Resource, fields, inputs
 
 from model1 import Model1
 from model2 import Model2
@@ -28,26 +25,52 @@ model_ = api.model('Model1', {
     'task': fields.String(required=True, description='The task details')
 })
 
+STATE = {}
+STATE_HIST = []
+EVENT_HIST = []
+
 model1 = Model1()
 model2 = Model2()
 model3 = Model3()
+model3.get({'tx': 'follow'})
 
-STATE = {}
+parser_get_interview_session = api.parser()
+parser_get_interview_session.add_argument('interview_id', type=str, help='unique identifier for a single interview', required=True, default='DS001')
+parser_get_interview_session.add_argument('tot_time', type=int, help='total time for the interfiew (minute)', required=True, default=30)
+
+@ns_model.route('/interview_session/')
+class InterviewSession(Resource):
+    '''Shows ...'''
+    # @ns.doc('list_...')
+    # @ns.marshal_list_with(model_)
+    # parser.add_argument('in_files', type=FileStorage, location='files')
+    # @ns.marshal_with(model1, code=200, description='success')
+    @ns_model.expect(parser_get_interview_session)
+    def get(self):
+        '''start or restart the interview session'''
+        args = parser_get_interview_session.parse_args()
+        try:
+            if STATE:
+                STATE_HIST.append(STATE)
+                model1 = Model1()
+                model2 = Model2()
+                model3 = Model3()
+                model3.get({'tx': 'follow'})
+            STATE['interview_id'] = args['interview_id']
+            STATE['tot_time'] = args['tot_time']
+            STATE['rem_time'] = STATE['tot_time']
+            STATE['round'] = 0
+            return {'msg': 'succeeded'}
+        except:
+            return {'msg': 'failed'}, 400
 
 parser_get_question = api.parser()
-parser_get_question.add_argument('cnt', type=int, help='(not working yet) how many questions do you need?', default=3)
-parser_get_question.add_argument('question_prev', type=str, help='what question is picked by the interviewer previously?')
-parser_get_question.add_argument('answer_prev', type=str, help='what answer is given by the interviewee previously?')
+parser_get_question.add_argument('question', type=str, help='what question is picked by the interviewer previously?')
+parser_get_question.add_argument('answer', type=str, help='what answer is given by the interviewee previously?')
 parser_get_question.add_argument('interview_id', type=str, help='unique identifier for a single interview', required=True, default='DS001')
-parser_get_question.add_argument('config_tot_time', type=int, help='total time for the interfiew (minute)', required=True, default=30)
-parser_get_question.add_argument('config_strategy', type=int, help='strategy on how to proceed the interview')
-
-parser_put_question = api.parser()
-parser_put_question.add_argument('question_prev', type=str, help='what question is picked by the interviewer previously?')
-parser_put_question.add_argument('answer_prev', type=str, help='what answer is given by the interviewee previously?', required=True, default='I tried to do my best, sir!')
-parser_put_question.add_argument('interview_id', type=str, help='unique identifier for a single interview', required=True, default='DS001')
-parser_put_question.add_argument('config_tot_time', type=int, help='total time for the interfiew (minute)', required=True, default=30)
-parser_put_question.add_argument('config_strategy', type=int, help='strategy on how to proceed the interview')
+# parser_get_question.add_argument('config_tot_time', type=int, help='total time for the interfiew (minute)', required=True, default=30)
+# parser_get_question.add_argument('config_strategy', type=int, help='strategy on how to proceed the interview')
+parser_get_question.add_argument('is_follow_up', type=inputs.boolean, help='whether it is follow-up or not', required=True, default='false')
 
 @ns_model.route('/question/')
 class Question(Resource):
@@ -61,96 +84,93 @@ class Question(Resource):
         '''get recommended questions from the models'''
         args = parser_get_question.parse_args()
         args_to_backend = {
-            'cnt': args['cnt'], # 3, 5, ...
-            'question_prev': args['question_prev'], # a single string
-            'answer_prev': args['answer_prev'], # a single string
             'interview_id': args['interview_id'], # DS001, ...
-            'config_tot_time': args['config_tot_time'], # 30
-            'config_strategy': args['config_strategy'], # not determined yet
         }
-        if args['interview_id'] not in STATE:
-            args_to_backend['tx'] = 'set_initial_with_example'
-            STATE[args['interview_id']] = {}
-            STATE[args['interview_id']]['rem_time'] = args['config_tot_time']
-            args_to_backend['rem_time'] = STATE[args['interview_id']]['rem_time']
-            ret = model2.get(args_to_backend)
-        else:
-            args_to_backend['tx'] = 'answerq'
-            STATE[args['interview_id']]['rem_time'] -= 2
-            args_to_backend['rem_time'] = STATE[args['interview_id']]['rem_time']
-            ret = model2.get(args_to_backend)
-        print(STATE)
-        return ret
+        if args['interview_id'] == STATE.get('interview_id'):
+            STATE['rem_time'] -= 2 # TODO: decrement unit
+            args_to_backend['tot_time'] = STATE['tot_time']
+            args_to_backend['rem_time'] = STATE['rem_time']
+            if STATE['round'] == 0:
+                if args['is_follow_up']:
+                    return {'msg': 'at least one question should have been picked by the interviewer'}, 400
+                args_to_backend['tx'] = 'set_initial_with_example'
+                ret = model2.get(args_to_backend)
 
+                STATE['round'] += 1
+                return ret
+            else:
+                if not args['question'] or not args['answer']:
+                    return {'msg': 'question and answer must be provided'}, 400
+                if args['is_follow_up']:
+                    if STATE['round'] <= 1:
+                        return {'msg': 'at least one question should have been picked by the interviewer'}, 400
+                    args_to_backend['tx'] = 'request_for_followup_q'
+                    ret = model2.get(args_to_backend)
+
+                    args_to_backend['tx'] = 'answerq'
+                    args_to_backend['from'] = 'interviewee'
+                    args_to_backend['info'] = ret
+                    args_to_backend['info']['flag'] = 0 # TODO: flag
+                    ret = model3.get(args_to_backend)
+
+                    args_to_backend['tx'] = 'receive_followup_q'
+                    del args_to_backend['from']
+                    del args_to_backend['info']
+                    args_to_backend.update(dict(zip(range(1, 3 + 1), ret)))
+                    ret = model2.get(args_to_backend)
+
+                    STATE['round'] += 1
+                    return ret
+                else:
+                    args_to_backend['tx'] = 'pickq'
+                    args_to_backend['from'] = 'interviewer'
+                    args_to_backend['info'] = {'flag': 0, 'question': args['question']} # TODO: flag
+                    ret = model2.get(args_to_backend) # TODO: pickq return message handling
+                    if not ret['is_done']:
+                        return {'msg': 'failed to record the picked question to the model'}, 400
+
+                    args_to_backend['tx'] = 'answerq'
+                    args_to_backend['from'] = 'interviewee'
+                    args_to_backend['info'] = {'flag': 0, 'answer': args['answer']} # TODO: flag
+                    ret = model2.get(args_to_backend)
+
+                    STATE['round'] += 1
+                    return ret
+        else:
+            return {'msg': 'the interview session id is not active now'}, 400
+
+parser_put_config = api.parser()
+# parser_put_config.add_argument('interview_id', type=str, help='unique identifier for a single interview', required=True, default='DS001')
+# parser_put_config.add_argument('tot_time', type=int, help='total time for the interfiew (minute)', required=True, default=30)
+@ns_model.route('/config/')
+class Config(Resource):
     '''Shows ...'''
     # @ns.doc('list_...')
     # @ns.marshal_list_with(model_)
     # parser.add_argument('in_files', type=FileStorage, location='files')
     # @ns.marshal_with(model1, code=200, description='success')
-    @ns_model.expect(parser_put_question)
+    @ns_model.expect(parser_put_config)
     def put(self):
-        '''put a question picked by the interviewer into the models'''
-        args = parser_get_question.parse_args()
-        if args['interview_id'] not in STATE:
-            return {'msg': 'PUT question is allowed after GET question is performed at least once.'}, 400
-        args_to_backend = {
-            'tx': 'pickq',
-            'answer_prev': args['answer_prev'], # a single string
-            'interview_id': args['interview_id'], # DS001, ...
-            'config_tot_time': args['config_tot_time'], # 30
-            'config_strategy': args['config_strategy'], # not determined yet
-        }
-        ret = model2.get(args_to_backend)
-        return ret
+        '''(UNDER CONSTRUCTION) register all or some of configurations to the middle-end and model'''
+        args = parser_put_config.parse_args()
+        return {'msg': 'under construction'}, 404
 
-# parser_raw_text = api.parser()
-# parser_raw_text.add_argument('cnt', type=int, help='how many raw data to see')
-# @ns_model1.route('/raw_text/')
-# class Model1_(Resource):
-#     '''Shows ...'''
-#     # @ns.doc('list_...')
-#     # @ns.marshal_list_with(model_)
-#     # parser.add_argument('in_files', type=FileStorage, location='files')
-#     # @ns.marshal_with(model1, code=200, description='success')
-#     @ns_model1.expect(parser_raw_text)
-#     def get(self):
-#         '''get raw text data'''
-#         args = parser_raw_text.parse_args()
-#         print(args)
-#         ret = model1.get({'tx': 'get_raw_data', 'cnt': args['cnt']})
-#         return ret
+parser_get_interviewee_analysis = api.parser()
+# parser_put_config.add_argument('interview_id', type=str, help='unique identifier for a single interview', required=True, default='DS001')
+# parser_put_config.add_argument('tot_time', type=int, help='total time for the interfiew (minute)', required=True, default=30)
+@ns_model.route('/interviewee_analysis/')
+class IntervieweeAnalysis(Resource):
+    '''Shows ...'''
+    # @ns.doc('list_...')
+    # @ns.marshal_list_with(model_)
+    # parser.add_argument('in_files', type=FileStorage, location='files')
+    # @ns.marshal_with(model1, code=200, description='success')
+    @ns_model.expect(parser_get_interviewee_analysis)
+    def get(self):
+        '''(UNDER CONSTRUCTION) get interviewee's (applicant's) analysis'''
+        args = parser_get_interviewee_analysis.parse_args()
+        return {'msg': 'under construction'}, 404
 
-# parser = api.parser()
-# parser.add_argument('txt', type=str, help='Some param')
-# @ns_model2.route('/upper/')
-# class Model2_(Resource):
-#     '''Shows ...'''
-#     # @ns.doc('list_...')
-#     # @ns.marshal_list_with(model_)
-#     # parser.add_argument('in_files', type=FileStorage, location='files')
-#     # @ns.marshal_with(model1, code=200, description='success')
-#     @ns_model2.expect(parser)
-#     def get(self):
-#         '''get upper-case text'''
-#         args = parser.parse_args()
-#         ret = model2.get({'tx': 'get_upper', 'txt': list(args['txt'].split('/'))})
-#         return ret
-
-# @ns_model3.route('/raw_upper/')
-# class Model3_(Resource):
-#     '''Shows ...'''
-#     # @ns.doc('list_...')
-#     # @ns.marshal_list_with(model_)
-#     parser = api.parser()
-#     parser.add_argument('txt', type=str, help='Some param')
-#     # parser.add_argument('in_files', type=FileStorage, location='files')
-#     # @ns.marshal_with(model1, code=200, description='success')
-#     # @ns_model3.expect(parser)
-#     def get(self):
-#         '''get upper-case version of raw text data'''
-#         args = parser.parse_args()
-#         ret = model3.get({'tx': 'get_raw_text_upper'})
-#         return ret
 
 if __name__ == '__main__':
     app.run(debug=True)
