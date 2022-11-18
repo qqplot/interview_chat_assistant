@@ -1,3 +1,6 @@
+# TODO: mashalling responses
+# TODO: user identifier
+# TODO: cv & jd infomation retrieval from model 1
 from flask import Flask
 from flask_restx import Api, Resource, fields, inputs
 
@@ -48,6 +51,8 @@ class InterviewSession(Resource):
     @ns_model.expect(parser_get_interview_session)
     def get(self):
         '''start or restart the interview session'''
+        global STATE
+
         args = parser_get_interview_session.parse_args()
         try:
             if STATE:
@@ -56,13 +61,14 @@ class InterviewSession(Resource):
                 model2 = Model2()
                 model3 = Model3()
                 model3.get({'tx': 'follow'})
+                STATE = {}
             STATE['interview_id'] = args['interview_id']
             STATE['tot_time'] = args['tot_time']
             STATE['rem_time'] = STATE['tot_time']
             STATE['round'] = 0
             return {'msg': 'succeeded'}
-        except:
-            return {'msg': 'failed'}, 400
+        except Exception as e:
+            return {'msg': 'failed', 'debug': str(e)}, 400
 
 parser_get_question = api.parser()
 parser_get_question.add_argument('question', type=str, help='what question is picked by the interviewer previously?')
@@ -87,12 +93,13 @@ class Question(Resource):
             'interview_id': args['interview_id'], # DS001, ...
         }
         if args['interview_id'] == STATE.get('interview_id'):
-            STATE['rem_time'] -= 2 # TODO: decrement unit
+            STATE['rem_time'] -= 2 # FIXME: decrement unit
             args_to_backend['tot_time'] = STATE['tot_time']
             args_to_backend['rem_time'] = STATE['rem_time']
             if STATE['round'] == 0:
                 if args['is_follow_up']:
-                    return {'msg': 'at least one question should have been picked by the interviewer'}, 400
+                    # return {'msg': 'at least one question should have been picked by the interviewer'}, 400
+                    return {'msg': 'at least 2 questions should have been picked by the interviewer'}, 400 # FIXME: at least 2, right?
                 args_to_backend['tx'] = 'set_initial_with_example'
                 ret = model2.get(args_to_backend)
 
@@ -103,14 +110,23 @@ class Question(Resource):
                     return {'msg': 'question and answer must be provided'}, 400
                 if args['is_follow_up']:
                     if STATE['round'] <= 1:
-                        return {'msg': 'at least one question should have been picked by the interviewer'}, 400
+                        # return {'msg': 'at least one question should have been picked by the interviewer'}, 400
+                        return {'msg': 'at least 2 questions should have been picked by the interviewer'}, 400 # FIXME: at least 2, right?
+
+                    args_to_backend['tx'] = 'pickq'
+                    args_to_backend['from'] = 'interviewer'
+                    args_to_backend['info'] = {'flag': 0, 'question': args['question']} # FIXME: flag
+                    ret = model2.get(args_to_backend) # FIXME: pickq return message handling
+                    if not ret['is_done']:
+                        return {'msg': 'failed to record the picked question to the model'}, 400
+
                     args_to_backend['tx'] = 'request_for_followup_q'
                     ret = model2.get(args_to_backend)
 
                     args_to_backend['tx'] = 'answerq'
                     args_to_backend['from'] = 'interviewee'
                     args_to_backend['info'] = ret
-                    args_to_backend['info']['flag'] = 0 # TODO: flag
+                    args_to_backend['info']['flag'] = 0 # FIXME: flag
                     ret = model3.get(args_to_backend)
 
                     args_to_backend['tx'] = 'receive_followup_q'
@@ -124,14 +140,14 @@ class Question(Resource):
                 else:
                     args_to_backend['tx'] = 'pickq'
                     args_to_backend['from'] = 'interviewer'
-                    args_to_backend['info'] = {'flag': 0, 'question': args['question']} # TODO: flag
-                    ret = model2.get(args_to_backend) # TODO: pickq return message handling
+                    args_to_backend['info'] = {'flag': 0, 'question': args['question']} # FIXME: flag
+                    ret = model2.get(args_to_backend) # FIXME: pickq return message handling
                     if not ret['is_done']:
                         return {'msg': 'failed to record the picked question to the model'}, 400
 
                     args_to_backend['tx'] = 'answerq'
                     args_to_backend['from'] = 'interviewee'
-                    args_to_backend['info'] = {'flag': 0, 'answer': args['answer']} # TODO: flag
+                    args_to_backend['info'] = {'flag': 0, 'answer': args['answer']} # FIXME: flag
                     ret = model2.get(args_to_backend)
 
                     STATE['round'] += 1
