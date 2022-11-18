@@ -185,7 +185,7 @@ class Model2:
 
         # (initial info) 면접평가표의 평가문항(optional한 부분이나 시나리오를 위해 필요할 것으로 생각됨)
         self.exampleSection = ['intro', 'experience', 'knowledge', 'experties', 'relationship']
-        self.example_total_time = 20 #총 면접시간(분)
+        self.example_total_time = 25 #총 면접시간(분)
         self.example_timeperqa_bysection = [2, 2, 2, 2, 2] #평가항목별 qa 1loop 소요시간(분) / 문항수 count시 고려
         self.example_section_ratio = [10, 30, 20, 40, 0] #평가항목별 평가비중(합계100) / 문항수 배분에 사용 / 예시) [25, 25, 30, 20]
 
@@ -271,7 +271,10 @@ class Model2:
         self.example_flag = 1 
 
         # (interaction) question from model3 정보
-        self.example_q_from_m3 = { 1: 'follow-up q1',  2: 'follow-up q2',  3: 'follow-up q3'}
+        self.example_q_from_m3 = {1 : { 1: '1_follow-up q1',  2: '1_follow-up q2',  3: '1_follow-up q3'}}
+        
+        #example_test용_flag2
+        self.example_flag2 = 1
         
         # { 'qfromm3' :  
         #                           [{'section' : 'experience',
@@ -630,7 +633,7 @@ class Model2:
             else : #나머지는 original question의 format을 따르도록
                 df_new[col] = q_row[col]
                 # df_new[col] = q_row[col]
-        self.q_initial_scored.append(df_new.to_dict(orient='records')) # follow-up question의 follow-up question을 대비하여...
+        self.q_initial_scored += df_new.to_dict(orient='records') # follow-up question의 follow-up question을 대비하여...
         self.follow_up_q = df_new.to_dict(orient='records') # model3로부터 제공된 Q 리스트는 임시적인 성격이므로 self.q_remaining에는 보관하지 않고, front 보낼 function에서만 사용한다.
         self.follow_up_q_ready = True #follow-up question이 준비되면 flag를 세운다
         
@@ -710,8 +713,8 @@ class Model2:
             self.q_initial_scoring()
 
             # scoring 잘 되었나 check
-            print('\n>> check get_q_remaining')
-            print(pd.DataFrame(self.get_q_remaining()))
+            print('\n>> check get_q_remaining(top10)')
+            print(pd.DataFrame(self.get_q_remaining()).iloc[:10,:])
             print('-------   done   -------\n')
 
             print('\n----------- SET_INITIAL_WITH_EXAMPLE ends with returns ------------\n')
@@ -745,8 +748,8 @@ class Model2:
             print('\n>> check self.picked_q_history')
             print(self.picked_q_history)
             
-            print('\n>> check get_q_remaining')
-            print(pd.DataFrame(self.get_q_remaining()))
+            print('\n>> check get_q_remaining(top10)')
+            print(pd.DataFrame(self.get_q_remaining()).iloc[:10,:])
 
             print('\n>> check current context / show 5 elements')
             print(self.get_current_context()[:5])
@@ -797,11 +800,12 @@ class Model2:
             print(f'FLAG = {self.example_flag}')
             self.example_flag +=1 
             if self.example_flag >= 4 :
-                dummyquestion = 'dummyQ'+str(self.example_flag)
-                dummyanswer = 'dummyA'+str(self.example_flag)
-                question_to_store = {'section' : 'experties', 'question' : dummyquestion, 'source' : 'bank', 'tag_lv0' : 'general', 'tag_lv1' : 'experience', 'score' : 24.5 }
-                self.q_initial_scored.append(question_to_store)
-                self.q_remaining.append(question_to_store)
+                for s in np.random.permutation(self.section).tolist() :
+                    dummyquestion = 'dummyQ_'+str(self.example_flag)+' for '+s
+                    dummyanswer = 'dummyA_'+str(self.example_flag)+' for '+s
+                    question_to_store = {'section' : s, 'question' : dummyquestion, 'source' : 'bank', 'tag_lv0' : 'general', 'tag_lv1' : 'experience', 'score' : 24.5 }
+                    self.q_initial_scored.append(question_to_store)
+                    self.q_remaining.append(question_to_store)
                 self.example_picked_q_info[self.example_flag] = { 'from' : 'interviewer',  'info' : {'flag' : self.example_flag, 'question' : dummyquestion}}
                 self.example_answer_info[self.example_flag] = { 'from' : 'interviewee', 'info' : {'flag' : self.example_flag, 'answer' : dummyanswer} }
 
@@ -824,8 +828,8 @@ class Model2:
                 print(i[:5])
 
             # rescoring 잘 되었나 check
-            print('\n>> check whether question re-scoring works by get_q_remaining')
-            print(pd.DataFrame(self.get_q_remaining()))
+            print('\n>> check whether question re-scoring works by get_q_remaining(top10)')
+            print(pd.DataFrame(self.get_q_remaining()).iloc[:10,:])
 
             print('\n----------- ANSWERQ ends with returns ------------\n')
             return self.makeQforFront(ordering_section_first = True, num = 2)
@@ -874,7 +878,9 @@ class Model2:
             '''
             print('\n[ RECEIVE_FOLLOWUP_Q starts ]')
             # self.receive_q_from_m3(q_from_m3 = params['q_from_m3']) ##실제로는 middle에서 받아오나
-            self.receive_q_from_m3(q_from_m3=self.example_q_from_m3)##일단 example로 구현
+            self.receive_q_from_m3(q_from_m3=self.example_q_from_m3[self.example_flag2])##일단 example로 구현
+            self.example_flag2+=1
+            self.example_q_from_m3[self.example_flag2]={ 1: str(self.example_flag2) + '_follow-up q1',  2: str(self.example_flag2) + '_follow-up q2',  3: str(self.example_flag2) + '_follow-up q3'}
             print('\n----------- RECEIVE_FOLLOWUP_Q ends with returns ------------\n')
             return self.makeQforFront(ordering_section_first = True, num = 2)
 
@@ -997,4 +1003,34 @@ if __name__ == '__main__':
     result5 = model2.get({'tx':'answerq'})
     print('\n##### STEP5 return check makeQforFront : consider section')
     print(pd.DataFrame(result5))
+    print('\n\n\n')
+    
+    result6 = model2.get({'tx':'request_for_followup_q'})
+    print('\n##### STEP6 return check')
+    print(result6)
+    print('\n\n\n')
+
+    result7 = model2.get({'tx':'receive_followup_q'})
+    print('\n##### STEP7 return check')
+    print(pd.DataFrame(result7))
+    print('\n\n\n')
+    
+    result6 = model2.get({'tx':'request_for_followup_q'})
+    print('\n##### STEP6 return check')
+    print(result6)
+    print('\n\n\n')
+
+    result7 = model2.get({'tx':'receive_followup_q'})
+    print('\n##### STEP7 return check')
+    print(pd.DataFrame(result7))
+    print('\n\n\n')
+    
+    result6 = model2.get({'tx':'request_for_followup_q'})
+    print('\n##### STEP6 return check')
+    print(result6)
+    print('\n\n\n')
+
+    result7 = model2.get({'tx':'receive_followup_q'})
+    print('\n##### STEP7 return check')
+    print(pd.DataFrame(result7))
     print('\n\n\n')
