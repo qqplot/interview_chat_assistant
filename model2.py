@@ -596,6 +596,7 @@ class Model2:
         if len(self.picked_q_history) ==0 or len(self.answer_history) ==0 : 
             raise ValueError('There is no question history or answer history')
         df = pd.DataFrame(self.q_initial_scored)
+        # df = pd.DataFrame.from_dict(self.q_initial_scored, orient = 'columns')
         q_row = df[ df['question'] == self.picked_q_history[-1] ].iloc[0,:]
         # result = {'question' : self.picked_q_history[-1], 'tag_lv0' : q_row['tag_lv0'].item(), 'tag_lv1' : q_row['tag_lv1'].item(), 'answer' : self.answer_history[-1] }
         result = {'question' : self.picked_q_history[-1], 'tag_lv0' : q_row['tag_lv0'], 'tag_lv1' : q_row['tag_lv1'], 'answer' : self.answer_history[-1] }
@@ -793,7 +794,17 @@ class Model2:
             time_left = self.time_left 
             # self.receive_answer(answer_info=self.example_answer_info, time_left=time_left-2) ##일단 example로 구현 / ★일단2분 감소로 구현
             self.receive_answer(answer_info = self.example_answer_info[self.example_flag], time_left = time_left-2) ##일단 example로 구현
+            print(f'FLAG = {self.example_flag}')
             self.example_flag +=1 
+            if self.example_flag >= 4 :
+                dummyquestion = 'dummyQ'+str(self.example_flag)
+                dummyanswer = 'dummyA'+str(self.example_flag)
+                question_to_store = {'section' : 'experties', 'question' : dummyquestion, 'source' : 'bank', 'tag_lv0' : 'general', 'tag_lv1' : 'experience', 'score' : 24.5 }
+                self.q_initial_scored.append(question_to_store)
+                self.q_remaining.append(question_to_store)
+                self.example_picked_q_info[self.example_flag] = { 'from' : 'interviewer',  'info' : {'flag' : self.example_flag, 'question' : dummyquestion}}
+                self.example_answer_info[self.example_flag] = { 'from' : 'interviewee', 'info' : {'flag' : self.example_flag, 'answer' : dummyanswer} }
+
             
             print('\n>> check self.answer_now')
             print(self.answer_now)
@@ -914,4 +925,76 @@ if __name__ == '__main__':
     result7 = model2.get({'tx':'receive_followup_q'})
     print('\n##### STEP7 return check')
     print(pd.DataFrame(result7))
+    print('\n\n\n')
+
+    
+    result4 = model2.get({'tx':'pickq'})
+    print('\n##### STEP4 return check')
+    print(result4)
+    print('\n\n\n')
+
+    
+    result5 = model2.get({'tx':'answerq'})
+    print('\n##### STEP5 return check makeQforFront : consider section')
+    print(pd.DataFrame(result5))
+    print('\n\n\n')
+
+    
+    result4 = model2.get({'tx':'pickq'})
+    print('\n##### STEP4 return check')
+    print(result4)
+    print('\n\n\n')
+
+    
+    result5 = model2.get({'tx':'answerq'})
+    print('\n##### STEP5 return check makeQforFront : consider section')
+    print(pd.DataFrame(result5))
+    print('\n\n\n')
+
+    
+    result4 = model2.get({'tx':'pickq'})
+    print('\n##### STEP4 return check')
+    print(result4)
+    print('\n\n\n')
+
+    
+    result5 = model2.get({'tx':'answerq'})
+    print('\n##### STEP5 return check makeQforFront : consider section')
+    print(pd.DataFrame(result5))
+    print('\n\n\n')
+
+    
+    result4 = model2.get({'tx':'pickq'})
+    print('\n##### STEP4 return check')
+    print(result4)
+    print('\n\n\n')
+
+    
+    result5 = model2.get({'tx':'answerq'})
+    print('\n##### STEP5 return check makeQforFront : consider section')
+    print(pd.DataFrame(result5))
+    print('\n\n\n')
+
+    
+    result4 = model2.get({'tx':'pickq'})
+    print('\n##### STEP4 return check')
+    print(result4)
+    print('\n\n\n')
+
+    
+    result5 = model2.get({'tx':'answerq'})
+    print('\n##### STEP5 return check makeQforFront : consider section')
+    print(pd.DataFrame(result5))
+    print('\n\n\n')
+
+    
+    result4 = model2.get({'tx':'pickq'})
+    print('\n##### STEP4 return check')
+    print(result4)
+    print('\n\n\n')
+
+    
+    result5 = model2.get({'tx':'answerq'})
+    print('\n##### STEP5 return check makeQforFront : consider section')
+    print(pd.DataFrame(result5))
     print('\n\n\n')
