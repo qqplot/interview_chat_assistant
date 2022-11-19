@@ -1,9 +1,9 @@
 # README
 
-## TODO
-* None
+## Resource
+* [MVC Function Call Structure](https://docs.google.com/spreadsheets/d/1nXtUw-EeiALKhxYcIgg_WjhwShmOYG8hh3wrzlu1QAc/edit?usp=sharing)
 
-## Middle-End
+## Middle-End 서버 구동
 * 환경 설정
     - `conda create -n p4ds_grp5 python=3.10`
     - `conda activate p4ds_grp5`
@@ -12,6 +12,19 @@
     - `python main.py`
     - Flask 서버 구동 확인 후, http://127.0.0.1:5000 접속(Swagger)
 * 최초 구동 시, `sentence-transformers` 및 pre-trained model 다운로드에 2 ~ 3분 소요
+
+## Frond-End 서버 구동
+
+Node.js 설치 후에 진행바랍니다.
+`node -v` 로 확인하면 됩니다.
+
+
+```sh
+cd front
+npm i
+```
+
+패키지 설치 후에 `npm run dev`
 
 ## Git 주요 절차 개념 설명
 * 모든 작업은 본 repo로부터 최소한 한번의 `git clone`이 된 local directory에서 수행합니다.
@@ -47,18 +60,3 @@
         - `git push origin master`
 * 협업 개발 시 형상 버전 충돌이 수시로 일어나고 매번 해결해야 하므로, `git pull`을 자주 실행해 주는 것이 좋은 습관임. 그리고, `git commit` 전에 `git pull`을 한번씩 해 주는 것도 좋은 습관임.
 * local directory와 remote repo 간 형상 버전 충돌이 끝까지 해결되지 않을 때는 architect와 상의 바람.
-
-
-# Frond-End 서버 구동
-
-Node.js 설치 후에 진행바랍니다.
-`node -v` 로 확인하면 됩니다.
-
-
-```sh
-cd front
-npm i
-```
-
-패키지 설치 후에 `npm run dev`
-

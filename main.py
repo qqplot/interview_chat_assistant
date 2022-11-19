@@ -1,6 +1,7 @@
 # TODO: mashalling responses
 # TODO: user identifier
 # TODO: cv & jd infomation retrieval from model 1
+# TODO: middle-end logging
 from flask import Flask
 from flask_restx import Api, Resource, fields, inputs
 
@@ -32,10 +33,11 @@ STATE = {}
 STATE_HIST = []
 EVENT_HIST = []
 
-model1 = Model1()
-model2 = Model2()
-model3 = Model3()
-model3.get({'tx': 'follow'})
+# model1 = Model1()
+# model2 = Model2()
+# model3 = Model3()
+model1 = model2 = model3 = None
+# model3.get({'tx': 'follow'})
 
 parser_get_interview_session = api.parser()
 parser_get_interview_session.add_argument('interview_id', type=str, help='unique identifier for a single interview', required=True, default='DS001')
@@ -51,15 +53,17 @@ class InterviewSession(Resource):
     @ns_model.expect(parser_get_interview_session)
     def get(self):
         '''start or restart the interview session'''
-        global STATE
+        global STATE, model1, model2, model3
 
         args = parser_get_interview_session.parse_args()
         try:
             if STATE:
                 STATE_HIST.append(STATE)
-                model1 = Model1()
-                model2 = Model2()
-                model3 = Model3()
+                # model1 = Model1()
+                # model2 = Model2()
+                # model3 = Model3()
+                del model1, model2, model3
+                model1, model2, model3 = Model1(), Model2(), Model3()
                 model3.get({'tx': 'follow'})
                 STATE = {}
             STATE['interview_id'] = args['interview_id']
@@ -186,7 +190,6 @@ class IntervieweeAnalysis(Resource):
         '''(UNDER CONSTRUCTION) get interviewee's (applicant's) analysis'''
         args = parser_get_interviewee_analysis.parse_args()
         return {'msg': 'under construction'}, 404
-
 
 if __name__ == '__main__':
     app.run(debug=True)
