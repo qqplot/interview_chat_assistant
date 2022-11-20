@@ -606,9 +606,13 @@ class Model2:
             raise ValueError('There is no question history or answer history')
         df = pd.DataFrame(self.q_initial_scored)
         # df = pd.DataFrame.from_dict(self.q_initial_scored, orient = 'columns')
-        q_row = df[ df['question'] == self.picked_q_history[-1] ].iloc[0,:]
+        if self.picked_q_history[-1] in df['question'] :
+            q_row = df[ df['question'] == self.picked_q_history[-1] ].iloc[0,:]
+            result = {'question' : self.picked_q_history[-1], 'tag_lv0' : q_row['tag_lv0'], 'tag_lv1' : q_row['tag_lv1'], 'answer' : self.answer_history[-1] }
+        else :
+            result = {'question' : self.picked_q_history[-1], 'tag_lv0' : 'not_found', 'tag_lv1' : 'not_found', 'answer' : self.answer_history[-1] }
         # result = {'question' : self.picked_q_history[-1], 'tag_lv0' : q_row['tag_lv0'].item(), 'tag_lv1' : q_row['tag_lv1'].item(), 'answer' : self.answer_history[-1] }
-        result = {'question' : self.picked_q_history[-1], 'tag_lv0' : q_row['tag_lv0'], 'tag_lv1' : q_row['tag_lv1'], 'answer' : self.answer_history[-1] }
+        
         self.provide_history_with_m3.append(result) # 제공 내역 기록해두기
         return result
 
@@ -780,7 +784,8 @@ class Model2:
             print('\n[ PICKQ starts ]')
             # params를 통해 question 내용 읽기
             # self.receive_q_choosed(params['question']) ##실제로는 middle에서 받아오나
-            self.receive_q_choosed(self.example_picked_q_info[self.example_flag]) ##일단 example로 구현
+            # self.receive_q_choosed(self.example_picked_q_info[self.example_flag]) ##일단 example로 구현
+            self.receive_q_choosed({ 'from' : params['from'],  'info' : params['info'] }) # param 정보 활용하기
             
             print('\n>> check self.picked_q_now')
             print(self.picked_q_now)
@@ -836,22 +841,27 @@ class Model2:
             print('\n[ ANSWERQ starts ]')
             
             # params를 통해 answer 내용 및 time_left 읽기
-            ##실제로는 middle에서 받아오나
-            time_left = self.time_left 
-            # self.receive_answer(answer_info=self.example_answer_info, time_left=time_left-2) ##일단 example로 구현 / ★일단2분 감소로 구현
-            self.receive_answer(answer_info = self.example_answer_info[self.example_flag], time_left = time_left-2) ##일단 example로 구현
+            '''
+            param format
+            {'interview_id': 'DS001', 'tot_time': 30, 'rem_time': 26, 'tx': 'answerq', 'from': 'interviewee', 'info': {'flag': 0, 'answer': 'test answer 1'}}
+            '''
+            self.time_left = params['rem_time']
+            # self.receive_answer(answer_info=self.example_answer_info, time_left=time_left-2) ##일단 example로 구현 / 
+            answer_info = { 'from' : params['from'], 'info' : params['info']}
+            self.receive_answer(answer_info = answer_info, time_left = self.time_left) 
+            # self.receive_answer(answer_info = self.example_answer_info[self.example_flag], time_left = self.time_left) 
             # self.receive_answer(answer_info = self.answer_generate(self.picked_q_history, self.answer_history), time_left = time_left-2) ##일단 answermachine으로 구현
-            print(f'FLAG = {self.example_flag}')
-            self.example_flag +=1 
-            if self.example_flag >= 4 :
-                for s in np.random.permutation(self.section).tolist() :
-                    dummyquestion = 'dummyQ_'+str(self.example_flag)+' for '+s
-                    dummyanswer = 'dummyA_'+str(self.example_flag)+' for '+s
-                    question_to_store = {'section' : s, 'question' : dummyquestion, 'source' : 'bank', 'tag_lv0' : 'general', 'tag_lv1' : 'experience', 'score' : 24.5 }
-                    self.q_initial_scored.append(question_to_store)
-                    self.q_remaining.append(question_to_store)
-                self.example_picked_q_info[self.example_flag] = { 'from' : 'interviewer',  'info' : {'flag' : self.example_flag, 'question' : dummyquestion}}
-                self.example_answer_info[self.example_flag] = { 'from' : 'interviewee', 'info' : {'flag' : self.example_flag, 'answer' : dummyanswer} }
+            # print(f'FLAG = {self.example_flag}')
+            # self.example_flag +=1 
+            # if self.example_flag >= 4 :
+            #     for s in np.random.permutation(self.section).tolist() :
+            #         dummyquestion = 'dummyQ_'+str(self.example_flag)+' for '+s
+            #         dummyanswer = 'dummyA_'+str(self.example_flag)+' for '+s
+            #         question_to_store = {'section' : s, 'question' : dummyquestion, 'source' : 'bank', 'tag_lv0' : 'general', 'tag_lv1' : 'experience', 'score' : 24.5 }
+            #         self.q_initial_scored.append(question_to_store)
+            #         self.q_remaining.append(question_to_store)
+            #     self.example_picked_q_info[self.example_flag] = { 'from' : 'interviewer',  'info' : {'flag' : self.example_flag, 'question' : dummyquestion}}
+            #     self.example_answer_info[self.example_flag] = { 'from' : 'interviewee', 'info' : {'flag' : self.example_flag, 'answer' : dummyanswer} }
 
             
             print('\n>> check self.answer_now')
@@ -921,10 +931,10 @@ class Model2:
                                 ] 
             '''
             print('\n[ RECEIVE_FOLLOWUP_Q starts ]')
-            # self.receive_q_from_m3(q_from_m3 = params['q_from_m3']) ##실제로는 middle에서 받아오나
-            self.receive_q_from_m3(q_from_m3=self.example_q_from_m3[self.example_flag2])##일단 example로 구현
-            self.example_flag2+=1
-            self.example_q_from_m3[self.example_flag2]={ 1: str(self.example_flag2) + '_follow-up q1',  2: str(self.example_flag2) + '_follow-up q2',  3: str(self.example_flag2) + '_follow-up q3'}
+            self.receive_q_from_m3(q_from_m3 = params['fq']) ##실제로는 middle에서 받아오나
+            # self.receive_q_from_m3(q_from_m3=self.example_q_from_m3[self.example_flag2])##일단 example로 구현
+            # self.example_flag2+=1
+            # self.example_q_from_m3[self.example_flag2]={ 1: str(self.example_flag2) + '_follow-up q1',  2: str(self.example_flag2) + '_follow-up q2',  3: str(self.example_flag2) + '_follow-up q3'}
             print('\n----------- RECEIVE_FOLLOWUP_Q ends with returns ------------\n')
             return self.makeQforFront(ordering_section_first = True, num = 2)
 
