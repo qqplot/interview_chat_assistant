@@ -734,8 +734,9 @@ class Model2:
 
             Section = ['intro', 'general', 'experience', 'knowledge', 'experties', 'relationship']
             section_ratio = [5, 10, 20, 20, 25, 20] #평가항목별 평가비중(합계100) / 문항수 배분에 사용 / 예시) [25, 25, 30, 20]
-            total_time = 40 #총 면접시간(분)
-            timeperqa_bysection = [1.5, 2, 2, 2, 2, 2] #평가항목별 qa 1loop 소요시간(분) / 문항수 count시 고려
+            # total_time = 40 #총 면접시간(분)
+            total_time = params['tot_time'] #총 면접시간(분)
+            timeperqa_bysection = [2, 2, 2, 2, 2, 2] #평가항목별 qa 1loop 소요시간(분) / 문항수 count시 고려
             
 
             self.set_initial_state (section = Section, 
