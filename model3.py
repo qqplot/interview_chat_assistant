@@ -53,7 +53,7 @@ class Model3:
             self.df = self.get_df()
             self.tech_question = self.get_question(self.df, 'technical')
             self.question = self.get_question(self.df, 'all')
-
+            self.cnt = {}
             # keywords list check
             print('>> Question keywords list')
             # self.get_Q_keywords(self.question)
@@ -130,6 +130,7 @@ class Model3:
                 else : #길이가 0 이면
                     ret = ['failed to generate follow-up question']
                 print('-------   done   -------\n')
+                self.cnt = {} # 다음에 여러번 쓰려면 초기화해야함....
                 return ret
 
 
