@@ -124,9 +124,11 @@ class Model3:
                             ret.append(self.question[idx])
                         else:
                             break
-                else:
+                elif len(self.rank) > 0 :
                     print(i+1,'.', self.question[idx])
                     ret.append(self.question[idx])
+                else : #길이가 0 이면
+                    ret = ['failed to generate follow-up question']
                 print('-------   done   -------\n')
                 return ret
 
