@@ -2,7 +2,7 @@
 # TODO: user identifier
 # TODO: cv & jd infomation retrieval from model 1
 # TODO: middle-end logging
-from flask import Flask
+from flask import Flask, jsonify, make_response
 from flask_restx import Api, Resource, fields, inputs
 
 from model1 import Model1
@@ -72,9 +72,15 @@ class InterviewSession(Resource):
             STATE['tot_time'] = args['tot_time']
             STATE['rem_time'] = STATE['tot_time']
             STATE['round'] = 0
-            return {'msg': 'succeeded'}
+            # return {'msg': 'succeeded'}
+            response = make_response(jsonify({'msg': 'succeeded'}), 200)
+            response.headers.add('Access-Control-Allow-Origin', '*')
+            return response
         except Exception as e:
-            return {'msg': 'failed', 'debug': str(e)}, 400
+            # return {'msg': 'failed', 'debug': str(e)}, 400
+            response = make_response(jsonify({'msg': 'failed', 'debug': str(e)}), 400)
+            response.headers.add('Access-Control-Allow-Origin', '*')
+            return response
 
 parser_get_question = api.parser()
 parser_get_question.add_argument('question', type=str, help='what question is picked by the interviewer previously?')
@@ -99,7 +105,7 @@ class Question(Resource):
             'interview_id': args['interview_id'], # DS001, ...
         }
         if args['interview_id'] == STATE.get('interview_id'):
-            STATE['rem_time'] -= 2 # FIXME: decrement unit
+            # STATE['rem_time'] -= 2 # FIXME: decrement unit
             args_to_backend['interview_id'] = STATE['interview_id']
             args_to_backend['interviewee_id'] = STATE['interviewee_id']
             args_to_backend['tot_time'] = STATE['tot_time']
@@ -112,21 +118,35 @@ class Question(Resource):
                 ret = model2.get(args_to_backend)
 
                 STATE['round'] += 1
-                return ret
+                # return ret
+                response = make_response(jsonify(ret), 200)
+                response.headers.add('Access-Control-Allow-Origin', '*')
+                return response
             else:
+                STATE['rem_time'] -= 2 # FIXME: decrement unit
+                args_to_backend['rem_time'] = STATE['rem_time']
                 if not args['question'] or not args['answer']:
-                    return {'msg': 'question and answer must be provided'}, 400
+                    # return {'msg': 'question and answer must be provided'}, 400
+                    response = make_response(jsonify({'msg': 'question and answer must be provided'}), 400)
+                    response.headers.add('Access-Control-Allow-Origin', '*')
+                    return response
                 if args['is_follow_up']:
                     if STATE['round'] <= 1:
                         # return {'msg': 'at least one question should have been picked by the interviewer'}, 400
-                        return {'msg': 'at least 2 questions should have been picked by the interviewer'}, 400 # FIXME: at least 2, right?
+                        # return {'msg': 'at least 2 questions should have been picked by the interviewer'}, 400 # FIXME: at least 2, right?
+                        response = make_response(jsonify({'msg': 'at least 2 questions should have been picked by the interviewer'}), 400)
+                        response.headers.add('Access-Control-Allow-Origin', '*')
+                        return response
 
                     args_to_backend['tx'] = 'pickq'
                     args_to_backend['from'] = 'interviewer'
                     args_to_backend['info'] = {'flag': 0, 'question': args['question']} # FIXME: flag
                     ret = model2.get(args_to_backend) # FIXME: pickq return message handling
                     if not ret['is_done']:
-                        return {'msg': 'failed to record the picked question to the model'}, 400
+                        # return {'msg': 'failed to record the picked question to the model'}, 400
+                        response = make_response(jsonify({'msg': 'failed to record the picked question to the model'}), 400)
+                        response.headers.add('Access-Control-Allow-Origin', '*')
+                        return response
 
                     args_to_backend['tx'] = 'answerq'
                     args_to_backend['from'] = 'interviewee'
@@ -149,14 +169,20 @@ class Question(Resource):
                     ret = model2.get(args_to_backend)
 
                     STATE['round'] += 1
-                    return ret
+                    # return ret
+                    response = make_response(jsonify(ret), 200)
+                    response.headers.add('Access-Control-Allow-Origin', '*')
+                    return response
                 else:
                     args_to_backend['tx'] = 'pickq'
                     args_to_backend['from'] = 'interviewer'
                     args_to_backend['info'] = {'flag': 0, 'question': args['question']} # FIXME: flag
                     ret = model2.get(args_to_backend) # FIXME: pickq return message handling
                     if not ret['is_done']:
-                        return {'msg': 'failed to record the picked question to the model'}, 400
+                        # return {'msg': 'failed to record the picked question to the model'}, 400
+                        response = make_response(jsonify({'msg': 'failed to record the picked question to the model'}), 400)
+                        response.headers.add('Access-Control-Allow-Origin', '*')
+                        return response
 
                     args_to_backend['tx'] = 'answerq'
                     args_to_backend['from'] = 'interviewee'
@@ -164,9 +190,15 @@ class Question(Resource):
                     ret = model2.get(args_to_backend)
 
                     STATE['round'] += 1
-                    return ret
+                    # return ret
+                    response = make_response(jsonify(ret), 200)
+                    response.headers.add('Access-Control-Allow-Origin', '*')
+                    return response
         else:
-            return {'msg': 'the interview session id is not active now'}, 400
+            # return {'msg': 'the interview session id is not active now'}, 400
+            response = make_response(jsonify({'msg': 'the interview session id is not active now'}), 400)
+            response.headers.add('Access-Control-Allow-Origin', '*')
+            return response
 
 parser_put_config = api.parser()
 # parser_put_config.add_argument('interview_id', type=str, help='unique identifier for a single interview', required=True, default='DS001')
@@ -186,13 +218,19 @@ class Config(Resource):
     def put(self):
         '''(UNDER CONSTRUCTION) register all or some of configurations to the middle-end and model'''
         args = parser_put_config.parse_args()
-        return {'msg': 'under construction'}, 404
+        # return {'msg': 'under construction'}, 404
+        response = make_response(jsonify({'msg': 'under construction'}), 404)
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
 
     @ns_model.expect(parser_get_config)
     def get(self):
         '''retrieve configurations from the middle-end and model'''
         args = parser_get_config.parse_args()
-        return STATE
+        # return STATE
+        response = make_response(jsonify(STATE), 200)
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
 
 parser_get_interviewee_analysis = api.parser()
 # parser_put_config.add_argument('interview_id', type=str, help='unique identifier for a single interview', required=True, default='DS001')
@@ -208,7 +246,10 @@ class IntervieweeAnalysis(Resource):
     def get(self):
         '''(UNDER CONSTRUCTION) get interviewee's (applicant's) analysis'''
         args = parser_get_interviewee_analysis.parse_args()
-        return {'msg': 'under construction'}, 404
+        # return {'msg': 'under construction'}, 404
+        response = make_response(jsonify({'msg': 'under construction'}), 404)
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
 
 if __name__ == '__main__':
     app.run(debug=True)
