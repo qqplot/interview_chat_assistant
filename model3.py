@@ -98,8 +98,10 @@ class Model3:
             
             print('>> Return 3 suggested question for the technical tag')
             if self.tag_lv0 == 'technical':
-                for idx, Q in enumerate(self.tech_question):
-                    print(idx+1,'.', Q)  
+                ret = []
+                for idx, q in enumerate(self.tech_question):
+                    print(idx+1,'.', q)  
+                    ret.append(q)
                 print('-------   done   -------\n') 
                 return None
 
@@ -134,7 +136,8 @@ class Model3:
                 self.ans = '' # 다음에 여러번 쓰려면 초기화해야함....
                 self.tag_lv0 = ''# 다음에 여러번 쓰려면 초기화해야함....
                 self.tag_lv1 = ''# 다음에 여러번 쓰려면 초기화해야함....
-                self.question=[]
+                # self.question=[] # 다음에 여러번 쓰려면 초기화해야함....
+                self.rank = []# 다음에 여러번 쓰려면 초기화해야함....
                 return ret
 
 
