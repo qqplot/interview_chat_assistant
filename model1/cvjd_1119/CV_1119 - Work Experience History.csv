@@ -1,0 +1,5 @@
+applicant_id,work_id,company_name,domain_name,position_name,start_date,end_date
+0,0,Dell Technologies,"Computer hardware, Software, Cloud computing, Data storage, Information security, Consulting",Data Scientist,2021/07/01,2022/06/30
+0,1,SparkCognition,"AI Solutions, Cybersecurity, Energy, Aerospace, Financial Services, Oil, Gas",Data Scientist,2022/08/01,2022/12/14
+1,0,Wayfair,e-commerce,Data Scientist,2017/12/01,2019/01/23
+1,1,Google,"AI, Advertising, Cloud computing, Computer software, Computer hardware, Internet",Data Scientist,2021/02/15,2022/12/14

@@ -1,0 +1,21 @@
+applicant_id,skill_category,skill_name,skill_level
+0,programming,Python,high
+0,programming,R,middle
+0,programming,SQL,high
+0,programming,VBA,middle
+0,programming,C,low
+0,programming,C++,low
+0,programming,linux,low
+0,visualization,JMP,middle
+0,visualization,ANSYS,middle
+0,visualization,MATLAB,middle
+0,visualization,Excel,high
+0,language,English,fluent
+0,language,Hindi,native
+1,programming,SQL,middle
+1,programming,Python ,high
+1,programming ,R,high
+1,visualization ,Tabelau,low
+1,language,Korean,native
+1,language,English,fluent
+1,language,French,elementary
