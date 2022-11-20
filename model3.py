@@ -21,6 +21,7 @@ class Model3:
         self.tag_lv0 = ''
         self.tag_lv1 = ''
         self.rank = []
+        self.question
         self.Q = []
      
 
