@@ -45,8 +45,10 @@ class Model3:
 
         #user가 follow up 선택
         if (params['tx'] == 'follow'):
-            print('\n [ (STEP1) The User selected follow-up questions ]')
-            
+            '''
+            model warming
+            '''
+
             self.df = self.get_df()
             self.tech_question = self.get_question(self.df, 'technical')
             self.question = self.get_question(self.df, 'all')
@@ -59,24 +61,38 @@ class Model3:
 
         # interviewee의 answer
         if (params['tx'] == 'answerq'):
-            print('\n [ (STEP2) Answer is accepted ]')
             '''
-            여기서 followup 할 답변을 받아야 합니다!
+            follow-up request 이후
+            모델2로부터 최직근 QA를 받아
+            follow-up question 생성 후 return한다.
+            - argument format for self.recent_qa_from_model2
+                params['info'] = {  'question' : 'What was the most difficult project you have done?',
+                                    'tag_lv0' : 'general',
+                                    'tag_lv1' : 'experience',
+                                    'answer' :  'It was my ~~' } 
             '''
-            # self.receive_ans(params['answer'])
-            self.receive_ans(self.example_answer_info) # example로 구현함
 
-            print('>> Check answer')
-            print(self.ans)
-            print('-------   done   -------\n')  
+            #### 샘플 활용 및 불필요 함수 주석처리
+            # print('\n [ (STEP2) Answer is accepted ]')
+            # '''
+            # 여기서 followup 할 답변을 받아야 합니다!
+            # # '''
+            # # self.receive_ans(params['answer'])
+            # self.receive_ans(self.example_answer_info) # example로 구현함
 
+            # print('>> Check answer')
+            # print(self.ans)
+            # print('-------   done   -------\n')  
+
+
+            
+            # self.recent_qa_from_model2(self.question_ans) 
+            self.recent_qa_from_model2(params['info']) #실제 middle로부터 정보를 받아온다.
             print('>> Use previous question tags')
-            '''
-            여기서 model2에 있는 이전 질문의 테그들을 받아야 합니다!
-            type은 sample 처럼 dict로 생각했습니다!
-            '''
-            # self.recent_qa_from_model2(params['QandA'])
-            self.recent_qa_from_model2(self.question_ans) 
+            print('>> Check q/tag_lv0/tag_lv1/answer')
+            print(f"self.tag_lv0 is {self.tag_lv0}")
+            print(f"self.tag_lv1 is {self.tag_lv1}")
+            print(f"self.answer is {self.ans}")
             print('-------   done   -------\n') 
             
             print('>> Return 3 suggested question for the technical tag')
@@ -220,7 +236,8 @@ class Model3:
         self.rank = sorted(self.cnt.items(), key=lambda x: x[1], reverse = True)
         rank = self.rank
         return rank
-       
+
+    # 이 함수는 이제 불필요       
     def receive_ans(self, answer_info : dict ) :
         '''
         - (기능) interviewee가 answer하면 middle로부터 answer info를 받아 self.answer_now에 입력한다.
@@ -238,6 +255,7 @@ class Model3:
     def recent_qa_from_model2(self, question_ans : dict):
         self.tag_lv0 = question_ans['tag_lv0']
         self.tag_lv1 = question_ans['tag_lv1']
+        self.ans = question_ans['answer'] # answer도 model2에서 받은 정보를 활용한다.
 
 if __name__ == '__main__':
     model3 = Model3()
