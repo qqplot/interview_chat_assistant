@@ -145,7 +145,7 @@ class Question(Resource):
                     args_to_backend['tx'] = 'receive_followup_q'
                     del args_to_backend['from']
                     del args_to_backend['info']
-                    args_to_backend.update(dict(zip(range(1, 3 + 1), ret)))
+                    args_to_backend.update({'fq': dict(zip(range(1, 3 + 1), ret))})
                     ret = model2.get(args_to_backend)
 
                     STATE['round'] += 1
