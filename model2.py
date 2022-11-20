@@ -631,7 +631,7 @@ class Model2:
             q_row = df[ df['question'] == self.picked_q_history[-1] ].iloc[0,:]
             result = {'question' : self.picked_q_history[-1], 'tag_lv0' : q_row['tag_lv0'], 'tag_lv1' : q_row['tag_lv1'], 'answer' : self.answer_history[-1] }
         else :
-            result = {'question' : self.picked_q_history[-1], 'tag_lv0' : 'general', 'tag_lv1' : 'experience', 'answer' : self.answer_history[-1] }
+            result = {'question' : self.picked_q_history[-1], 'tag_lv0' : 'unknown', 'tag_lv1' : 'unknown', 'answer' : self.answer_history[-1] }
         # result = {'question' : self.picked_q_history[-1], 'tag_lv0' : q_row['tag_lv0'].item(), 'tag_lv1' : q_row['tag_lv1'].item(), 'answer' : self.answer_history[-1] }
         
         self.provide_history_with_m3.append(result) # 제공 내역 기록해두기
