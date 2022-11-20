@@ -41,6 +41,7 @@ model1 = model2 = model3 = None
 
 parser_get_interview_session = api.parser()
 parser_get_interview_session.add_argument('interview_id', type=str, help='unique identifier for a single interview', required=True, default='DS001')
+parser_get_interview_session.add_argument('interviewee_id', type=str, help='unique identifier for the interviewee (applicant)', required=True, default='elon_musk')
 parser_get_interview_session.add_argument('tot_time', type=int, help='total time for the interfiew (minute)', required=True, default=30)
 
 @ns_model.route('/interview_session/')
@@ -67,6 +68,7 @@ class InterviewSession(Resource):
                 model3.get({'tx': 'follow'})
                 STATE = {}
             STATE['interview_id'] = args['interview_id']
+            STATE['interviewee_id'] = args['interviewee_id']
             STATE['tot_time'] = args['tot_time']
             STATE['rem_time'] = STATE['tot_time']
             STATE['round'] = 0
@@ -98,6 +100,8 @@ class Question(Resource):
         }
         if args['interview_id'] == STATE.get('interview_id'):
             STATE['rem_time'] -= 2 # FIXME: decrement unit
+            args_to_backend['interview_id'] = STATE['interview_id']
+            args_to_backend['interviewee_id'] = STATE['interviewee_id']
             args_to_backend['tot_time'] = STATE['tot_time']
             args_to_backend['rem_time'] = STATE['rem_time']
             if STATE['round'] == 0:
@@ -123,6 +127,11 @@ class Question(Resource):
                     ret = model2.get(args_to_backend) # FIXME: pickq return message handling
                     if not ret['is_done']:
                         return {'msg': 'failed to record the picked question to the model'}, 400
+
+                    args_to_backend['tx'] = 'answerq'
+                    args_to_backend['from'] = 'interviewee'
+                    args_to_backend['info'] = {'flag': 0, 'answer': args['answer']} # FIXME: flag
+                    _ = model2.get(args_to_backend) # the result is not used (ignored)
 
                     args_to_backend['tx'] = 'request_for_followup_q'
                     ret = model2.get(args_to_backend)
@@ -162,6 +171,10 @@ class Question(Resource):
 parser_put_config = api.parser()
 # parser_put_config.add_argument('interview_id', type=str, help='unique identifier for a single interview', required=True, default='DS001')
 # parser_put_config.add_argument('tot_time', type=int, help='total time for the interfiew (minute)', required=True, default=30)
+
+parser_get_config = api.parser()
+# parser_get_config.add_argument('interviewee_id', type=str, help='unique identifier for the interviewee (applicant)', required=True, default='elon_musk')
+
 @ns_model.route('/config/')
 class Config(Resource):
     '''Shows ...'''
@@ -174,6 +187,12 @@ class Config(Resource):
         '''(UNDER CONSTRUCTION) register all or some of configurations to the middle-end and model'''
         args = parser_put_config.parse_args()
         return {'msg': 'under construction'}, 404
+
+    @ns_model.expect(parser_get_config)
+    def get(self):
+        '''retrieve configurations from the middle-end and model'''
+        args = parser_get_config.parse_args()
+        return STATE
 
 parser_get_interviewee_analysis = api.parser()
 # parser_put_config.add_argument('interview_id', type=str, help='unique identifier for a single interview', required=True, default='DS001')
