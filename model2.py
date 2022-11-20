@@ -649,10 +649,13 @@ class Model2:
         tmp_df = pd.DataFrame(self.q_remaining)
         df_new = pd.DataFrame(columns=tmp_df.columns) # frame setting
         df_new['question'] = pd.DataFrame.from_dict(q_from_m3, orient = 'index') # question 먼저 입력
-
+        df_new.reset_index(drop = True, inplace = True)
         #최직근 Q 정보 가져와서 활용할 예정
         df = pd.DataFrame(self.q_initial_scored)
-        q_row = df[ df['question'] == self.picked_q_history[-1] ].iloc[0,:]
+        
+        if self.picked_q_history[-1] in df['question'].to_list() :
+            q_row = df[ df['question'] == self.picked_q_history[-1] ].iloc[0,:]
+        # q_row = df[ df['question'] == self.picked_q_history[-1] ].iloc[0,:]
 
         for col in tmp_df.columns :
             if col == 'question': pass #기입력하였음
@@ -662,8 +665,10 @@ class Model2:
             elif col == 'source' : #source 표기
                 df_new[col] = 'model3'
             else : #나머지는 original question의 format을 따르도록
-                df_new[col] = q_row[col]
-                # df_new[col] = q_row[col]
+                if self.picked_q_history[-1] in df['question'].to_list() :
+                    df_new[col] = q_row[col]
+                elif col == 'section' : df_new[col] = 'unknown'
+
         self.q_initial_scored += df_new.to_dict(orient='records') # follow-up question의 follow-up question을 대비하여...
         self.follow_up_q = df_new.to_dict(orient='records') # model3로부터 제공된 Q 리스트는 임시적인 성격이므로 self.q_remaining에는 보관하지 않고, front 보낼 function에서만 사용한다.
         self.follow_up_q_ready = True #follow-up question이 준비되면 flag를 세운다
