@@ -2,6 +2,7 @@ import typing
 import numpy as np
 import pandas as pd
 from sentence_transformers import SentenceTransformer  #sentence_transformers 설치 필요
+# from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline #transformers 설치필요 #자동 응답용
 
 PRIORITYSCORE_FOR_CVJD = 1000 #cvjd base question을 상단에 올리는 데에 사용됨(score에 가산)
 PRIORITYSCORE_FOR_FOLLOWUP = 2000 #follow up question을 상단에 올리는 데에 사용됨(score에 가산)
@@ -292,6 +293,11 @@ class Model2:
         # self.example_answer_info2 = { 'from' : 'interviewee', 
         #                 'info' : {'flag' : 2, 'answer' : 'answer for the follow-up q1'} }
 
+        #answering machine
+        # self.answer_generated = ''
+        # self.model_name = "deepset/roberta-base-squad2"
+        # self.answer_machine = pipeline('question-answering', model=self.model_name, tokenizer=self.model_name)
+        # self.cnt_answer = 0
 
     ###############
     ### methods ###
@@ -637,6 +643,20 @@ class Model2:
         self.follow_up_q = df_new.to_dict(orient='records') # model3로부터 제공된 Q 리스트는 임시적인 성격이므로 self.q_remaining에는 보관하지 않고, front 보낼 function에서만 사용한다.
         self.follow_up_q_ready = True #follow-up question이 준비되면 flag를 세운다
         
+    # def answer_generate(self, question_history : list, answer_history : list) :
+    #     question = question_history[-1]
+    #     context = ''
+    #     for dict in self.example_info_cv :
+    #         context += dict['contents']
+    #     for dict in self.example_info_jd :
+    #         context += dict['contents']            
+    #     for i in range(len(answer_history)) :
+    #         context += question_history[i] + answer_history[i] 
+    #     QA_input = {'question': question, 'context': context }
+    #     res = self.answer_machine(QA_input)
+    #     answer_format = { 'from' : 'interviewee',  'info' : {'flag' : 1, 'answer' : res['answer']} }
+    #     self.cnt_answer +=1
+    #     return answer_format
 
 
     '''
@@ -690,12 +710,35 @@ class Model2:
             '''
 
             print('\n[ SET_INITIAL_WITH_EXAMPLE starts ]')
-            # 초기값 셋팅(일단 example data로 구현)
-            self.set_initial_state (section = self.exampleSection, 
-                                    section_ratio = self.example_section_ratio, 
-                                    total_time = self.example_total_time, 
-                                    timeperqa_bysection = self.example_timeperqa_bysection,
-                                    q_from_bank = self.example_q_from_bank, 
+            # # 초기값 셋팅(일단 example data로 구현)
+            # self.set_initial_state (section = self.exampleSection, 
+            #                         section_ratio = self.example_section_ratio, 
+            #                         total_time = self.example_total_time, 
+            #                         timeperqa_bysection = self.example_timeperqa_bysection,
+            #                         q_from_bank = self.example_q_from_bank, 
+            #                         q_from_cvjd = self.example_q_from_cvjd,
+            #                         info_cv = self.example_info_cv, 
+            #                         info_jd = self.example_info_jd,
+            #                         )
+
+            # 초기값 셋팅 테스트중 
+
+            # q_from_bank
+            df = pd.read_csv('./model2/bank.csv', encoding='euc-kr')
+            columns = df.columns[:-1]
+            q_from_bank = { 'qfrombank' : df[columns].to_dict(orient='records') }
+
+            Section = ['intro', 'general', 'experience', 'knowledge', 'experties', 'relationship']
+            section_ratio = [5, 10, 20, 20, 25, 20] #평가항목별 평가비중(합계100) / 문항수 배분에 사용 / 예시) [25, 25, 30, 20]
+            total_time = 40 #총 면접시간(분)
+            timeperqa_bysection = [1.5, 2, 2, 2, 2, 2] #평가항목별 qa 1loop 소요시간(분) / 문항수 count시 고려
+            
+
+            self.set_initial_state (section = Section, 
+                                    section_ratio = section_ratio, 
+                                    total_time = total_time, 
+                                    timeperqa_bysection = timeperqa_bysection,
+                                    q_from_bank = q_from_bank, 
                                     q_from_cvjd = self.example_q_from_cvjd,
                                     info_cv = self.example_info_cv, 
                                     info_jd = self.example_info_jd,
@@ -797,6 +840,7 @@ class Model2:
             time_left = self.time_left 
             # self.receive_answer(answer_info=self.example_answer_info, time_left=time_left-2) ##일단 example로 구현 / ★일단2분 감소로 구현
             self.receive_answer(answer_info = self.example_answer_info[self.example_flag], time_left = time_left-2) ##일단 example로 구현
+            # self.receive_answer(answer_info = self.answer_generate(self.picked_q_history, self.answer_history), time_left = time_left-2) ##일단 answermachine으로 구현
             print(f'FLAG = {self.example_flag}')
             self.example_flag +=1 
             if self.example_flag >= 4 :
@@ -1034,3 +1078,7 @@ if __name__ == '__main__':
     print('\n##### STEP7 return check')
     print(pd.DataFrame(result7))
     print('\n\n\n')
+
+    # pd.DataFrame(model2.q_initial_scored).to_csv('./q_initial_scored.csv')
+    # pd.DataFrame(model2.picked_q_history).to_csv('./question_history.csv')
+    # pd.DataFrame(model2.answer_history).to_csv('./answer_history.csv')
