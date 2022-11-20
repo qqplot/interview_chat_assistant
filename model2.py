@@ -606,11 +606,11 @@ class Model2:
             raise ValueError('There is no question history or answer history')
         df = pd.DataFrame(self.q_initial_scored)
         # df = pd.DataFrame.from_dict(self.q_initial_scored, orient = 'columns')
-        if self.picked_q_history[-1] in df['question'] :
+        if self.picked_q_history[-1] in df['question'].to_list() :
             q_row = df[ df['question'] == self.picked_q_history[-1] ].iloc[0,:]
             result = {'question' : self.picked_q_history[-1], 'tag_lv0' : q_row['tag_lv0'], 'tag_lv1' : q_row['tag_lv1'], 'answer' : self.answer_history[-1] }
         else :
-            result = {'question' : self.picked_q_history[-1], 'tag_lv0' : 'not_found', 'tag_lv1' : 'not_found', 'answer' : self.answer_history[-1] }
+            result = {'question' : self.picked_q_history[-1], 'tag_lv0' : 'general', 'tag_lv1' : 'experience', 'answer' : self.answer_history[-1] }
         # result = {'question' : self.picked_q_history[-1], 'tag_lv0' : q_row['tag_lv0'].item(), 'tag_lv1' : q_row['tag_lv1'].item(), 'answer' : self.answer_history[-1] }
         
         self.provide_history_with_m3.append(result) # 제공 내역 기록해두기
