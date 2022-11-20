@@ -446,15 +446,15 @@ class Model2:
                        'score' : 24.5 },... 
                     ] 
         '''
+        df = pd.DataFrame( self.get_q_remaining() )
+        # # convert q_remaining into DataFrame(follow_up Q 상황이면 준비된 q도 포함하여 다룬다.)
+        # if self.follow_up_q_ready :
+        #     df = pd.DataFrame( self.get_q_remaining() + self.follow_up_q )
+        #     self.follow_up_q_mode = False # 사용후 mode 꺼주기
+        #     self.follow_up_q_ready = False # 사용후 mode 꺼주기
+        # else :
+        #     df = pd.DataFrame( self.get_q_remaining() )
         
-        # convert q_remaining into DataFrame(follow_up Q 상황이면 준비된 q도 포함하여 다룬다.)
-        if self.follow_up_q_ready :
-            df = pd.DataFrame( self.get_q_remaining() + self.follow_up_q )
-            self.follow_up_q_mode = False # 사용후 mode 꺼주기
-            self.follow_up_q_ready = False # 사용후 mode 꺼주기
-        else :
-            df = pd.DataFrame( self.get_q_remaining() )
-
         # 임시 column 추가(section order부여용)
         df = df.reindex(columns = df.columns.tolist() + ['section_tmp_order'])
         
@@ -477,17 +477,38 @@ class Model2:
         df = df.reindex(columns = df.columns.tolist() + ['order'])
         df['order'] = df.index
 
-
-        if not ordering_section_first :
-            return df[['order', 'section', 'question', 'source', 'score']][:num].to_dict(orient='records')
-        else :
+        # 남은 시간에 따라 section별로 가능한 질문수가 결정(self.possible_q_cnt_by_section)되어 있으니
+        # 이를 반영하여 list를 정리한다
+        # follow_up_q를 제공할 때는 가장 상단에 생성된 follow_up_q 모두가 보이도록 조치한다
+        if ordering_section_first :
             df_new = pd.DataFrame(columns = df.columns)
             for i in range(len(self.section), 0, -1) :
-                # df_new = pd.concat([df_new, df[ df['section_tmp_order']==i][:num] ], axis = 0)
                 df_new = pd.concat([df_new, df[ df['section_tmp_order']==i][:self.possible_q_cnt_by_section[len(self.section)-i]] ], axis = 0) 
+            df_new.reset_index(drop = True, inplace = True)
+            df_new['order'] = df_new.index
+            if self.follow_up_q_ready :
+                self.follow_up_q_mode = False # 사용후 mode 꺼주기
+                self.follow_up_q_ready = False # 사용후 mode 꺼주기
+                df_fq = pd.DataFrame( self.follow_up_q )
+                df_fq = df_fq.reindex(columns = df_fq.columns.tolist() + ['section_tmp_order', 'order'])
+                df_fq.sort_values(by=['score'], axis = 0, ascending = False, inplace = True)
+                df_fq.reset_index(drop = True, inplace = True)
+                df_new = pd.concat([df_fq, df_new], axis = 0) 
                 df_new.reset_index(drop = True, inplace = True)
                 df_new['order'] = df_new.index
             return df_new[['order', 'section', 'question', 'source', 'score']].to_dict(orient='records')
+        else : return df[['order', 'section', 'question', 'source', 'score']][:num].to_dict(orient='records')
+
+        # if not ordering_section_first :
+        #     return df[['order', 'section', 'question', 'source', 'score']][:num].to_dict(orient='records')
+        # else :
+        #     df_new = pd.DataFrame(columns = df.columns)
+        #     for i in range(len(self.section), 0, -1) :
+        #         # df_new = pd.concat([df_new, df[ df['section_tmp_order']==i][:num] ], axis = 0)
+        #         df_new = pd.concat([df_new, df[ df['section_tmp_order']==i][:self.possible_q_cnt_by_section[len(self.section)-i]] ], axis = 0) 
+        #         df_new.reset_index(drop = True, inplace = True)
+        #         df_new['order'] = df_new.index
+        #     return df_new[['order', 'section', 'question', 'source', 'score']].to_dict(orient='records')
 
     # interviewer choosed q ★외부데이터필요(middle 등)
     def receive_q_choosed(self, picked_q_info : dict ) :
