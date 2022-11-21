@@ -8,6 +8,8 @@
 # * modelx not instantiated -> error handling
 from flask import Flask, jsonify, make_response
 from flask_restx import Api, Resource, fields, inputs
+from waitress import serve
+import os
 
 from model1 import Model1
 from model2 import Model2
@@ -256,4 +258,7 @@ class IntervieweeAnalysis(Resource):
         return response
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    if os.path.exists('debug'):
+        app.run(debug=True)
+    else:
+        serve(app, host='127.0.0.1', port=5000)

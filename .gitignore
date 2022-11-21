@@ -57,3 +57,5 @@ __pycache__
 # Macos
 .idea
 .DS_Store
+
+debug
