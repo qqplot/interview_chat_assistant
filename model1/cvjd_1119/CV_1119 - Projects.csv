@@ -1,18 +1,18 @@
 applicant_id,work_id,project_description
-0,0,Used predictive analytics and exploratory analysis to optimize/detect the successful installation on the edge
-0,0,Designed and implemented the anomaly detection of the events registered by the millions of devices
-0,0,Used supervised and unsupervised ML techniques to assess the feasibility of the SSD failure prediction
+0,0,"Used predictive analytics and exploratory analysis to optimize/detect the successful installation on the edge"
+0,0,"Designed and implemented the anomaly detection of the events registered by the millions of devices"
+0,0,"Used supervised and unsupervised ML techniques to assess the feasibility of the SSD failure prediction"
 0,0,"Used statistics and ML to develop the method on determining the health score, application score, performance score and utilization score."
 0,0,"Implemented several analytical methods such as persona detection, device performance classifier and automating those scripts for regular auto-update of the relevant tables in the database."
 0,0,"Modeled noise classification on Audio clips using 1-D, 2D and feed forward Neural Network models to assess the system’s resource usage."
-0,1,Used supervised approach to predict the wind turbine failure weeks in advance with ~ 80% recall.
-0,1,Identified optimum operating state of the oil refinery to inform the current operating state of the system using unsupervised approach which provided actionable insights about the system performance and also able to detect the anomaly state before the failure happened.
-0,1,Used predictive analytics and anomaly detection to find the indoor temperature and humidity inside the hangar in the Airplane maintenance facilit
+0,1,"Used supervised approach to predict the wind turbine failure weeks in advance with ~ 80% recall."
+0,1,"Identified optimum operating state of the oil refinery to inform the current operating state of the system using unsupervised approach which provided actionable insights about the system performance and also able to detect the anomaly state before the failure happened."
+0,1,"Used predictive analytics and anomaly detection to find the indoor temperature and humidity inside the hangar in the Airplane maintenance facilit"
 1,0,"Researched and implemented novel statistical methods for time-series prediction to improve our bid optimization including Bayesian General Linear Additive Modeling, time-series in supervised learning, and causal modeling."
 1,0,"Designed and productionized the automated Machine Learning training pipeline and daily scoring service to predict the next order value of customers by leveraging statistical modeling techniques ( XGboost ) as well as Machine Learning microservices (Docker, Kubernetes, gRPC)."
 1,0,"Lead the development of the bidding machine learning algorithms for the online Display and Social ads at Wayfair, which has increased Wayfair’s incremental revenue by 23% ($50M/year) with improved efficiency."
-1,1,Deployed a process using SQL that quality checks whether new Aladdin platform clients only have access to data they have license for.
-1,1,Employed statistical methods in R to analyze 1M job applications on how certain text and non-text attributes of an application are perceived and can eventually affect the applicant's likelihood of getting the job.
-1,1,In close collaboration with DeepMind for Google (DMG) to develop machine-learning models that provide potential and impact predictability for program design in revenue growth programs of Google Ads. Contributed in experimental design during model pilot launching phase.
-1,1,Trained XAI model(SHAP) for H2o classification model to provide explanation for individual prediction output to advertisement clients.
+1,1,"Deployed a process using SQL that quality checks whether new Aladdin platform clients only have access to data they have license for."
+1,1,"Employed statistical methods in R to analyze 1M job applications on how certain text and non-text attributes of an application are perceived and can eventually affect the applicant's likelihood of getting the job.""
+1,1,"In close collaboration with DeepMind for Google (DMG) to develop machine-learning models that provide potential and impact predictability for program design in revenue growth programs of Google Ads. Contributed in experimental design during model pilot launching phase."
+1,1,"Trained XAI model(SHAP) for H2o classification model to provide explanation for individual prediction output to advertisement clients."
 1,1,"Based on on/offline visit history, numerically represented how much each user is interested in a specific topic(e.g., sports, home appliance, and cosmetics) using probability predictions from classification models like XGBoost, Random Forest, etc.."
