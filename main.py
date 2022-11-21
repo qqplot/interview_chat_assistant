@@ -1,11 +1,10 @@
 # TODO: mashalling responses
-# TODO: cv & jd infomation retrieval from model 1
 # TODO: middle-end logging
 # TODO: 20221120
 # * (DONE) GET config (remaining time)
 # * front-end에 추천했던 question들 중에만 pickq() 제공이 가능하도록 명시적으로 통제해야 하는지?
 # * (DONE) SET interview_session (interviewee id)
-# * modelx not instantiated -> error handling
+# * (DONE) modelx not instantiated -> error handling
 from flask import Flask, jsonify, make_response
 from flask_restx import Api, Resource, fields, inputs
 from waitress import serve
@@ -39,15 +38,13 @@ STATE = {}
 STATE_HIST = []
 EVENT_HIST = []
 
-# model1 = Model1()
-# model2 = Model2()
-# model3 = Model3()
+TIME_DEC_UNIT = 2
+
 model1 = model2 = model3 = None
-# model3.get({'tx': 'follow'})
 
 parser_put_interview_session = api.parser()
 parser_put_interview_session.add_argument('interview_id', type=str, help='unique identifier for a single interview', required=True, default='DS001')
-parser_put_interview_session.add_argument('interviewee_id', type=str, help='unique identifier for the interviewee (applicant)', required=True, default='elon_musk')
+parser_put_interview_session.add_argument('interviewee_id', type=str, help='unique identifier for the interviewee (applicant)', required=True, default='Rachel_Lee')
 parser_put_interview_session.add_argument('tot_time', type=int, help='total time for the interfiew (minute)', required=True, default=30)
 
 @ns_model.route('/interview_session/')
@@ -111,7 +108,6 @@ class Question(Resource):
             'interview_id': args['interview_id'], # DS001, ...
         }
         if args['interview_id'] == STATE.get('interview_id'):
-            # STATE['rem_time'] -= 2 # FIXME: decrement unit
             args_to_backend['interview_id'] = STATE['interview_id']
             args_to_backend['interviewee_id'] = STATE['interviewee_id']
             args_to_backend['tot_time'] = STATE['tot_time']
@@ -120,6 +116,14 @@ class Question(Resource):
                 if args['is_follow_up']:
                     # return {'msg': 'at least one question should have been picked by the interviewer'}, 400
                     return {'msg': 'at least 2 questions should have been picked by the interviewer'}, 400 # FIXME: at least 2, right?
+
+                args_to_backend['tx'] = 'runm1'
+                temp = args_to_backend['interviewee_id'] # FIXME: dummy interviewee_id injection
+                args_to_backend['interviewee_id'] = 'Rachel_Lee' # FIXME: dummy interviewee_id injection
+                ret = model1.get(args_to_backend)
+                args_to_backend['interviewee_id'] = temp # FIXME: dummy interviewee_id injection
+
+                args_to_backend['cvjdq'] = ret['qfromcvjd']
                 args_to_backend['tx'] = 'set_initial_with_example'
                 ret = model2.get(args_to_backend)
 
@@ -129,7 +133,7 @@ class Question(Resource):
                 response.headers.add('Access-Control-Allow-Origin', '*')
                 return response
             else:
-                STATE['rem_time'] -= 2 # FIXME: decrement unit
+                STATE['rem_time'] -= TIME_DEC_UNIT
                 args_to_backend['rem_time'] = STATE['rem_time']
                 if not args['question'] or not args['answer']:
                     # return {'msg': 'question and answer must be provided'}, 400
