@@ -68,9 +68,9 @@ class InterviewSession(Resource):
                 # model2 = Model2()
                 # model3 = Model3()
                 del model1, model2, model3
-                model1, model2, model3 = Model1(), Model2(), Model3()
-                model3.get({'tx': 'follow'})
-                STATE = {}
+            model1, model2, model3 = Model1(), Model2(), Model3()
+            model3.get({'tx': 'follow'})
+            STATE = {}
             STATE['interview_id'] = args['interview_id']
             STATE['interviewee_id'] = args['interviewee_id']
             STATE['tot_time'] = args['tot_time']
