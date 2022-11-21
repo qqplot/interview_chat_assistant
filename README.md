@@ -10,7 +10,7 @@
     - `pip install -r requirements.txt`
 * 구동 방법
     - `python main.py`
-    - Flask 서버 구동 확인 후, http://127.0.0.1:5000 접속(Swagger)
+    - Flask 서버 구동 확인 후, [http://127.0.0.1:5000](http://127.0.0.1:5000) 접속(Swagger)
 * 최초 구동 시, `sentence-transformers` 및 pre-trained model 다운로드에 2 ~ 3분 소요
 
 ## Frond-End 서버 구동

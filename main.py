@@ -1,7 +1,11 @@
 # TODO: mashalling responses
-# TODO: user identifier
 # TODO: cv & jd infomation retrieval from model 1
 # TODO: middle-end logging
+# TODO: 20221120
+# * (DONE) GET config (remaining time)
+# * front-end에 추천했던 question들 중에만 pickq() 제공이 가능하도록 명시적으로 통제해야 하는지?
+# * (DONE) SET interview_session (interviewee id)
+# * modelx not instantiated -> error handling
 from flask import Flask, jsonify, make_response
 from flask_restx import Api, Resource, fields, inputs
 
@@ -39,10 +43,10 @@ EVENT_HIST = []
 model1 = model2 = model3 = None
 # model3.get({'tx': 'follow'})
 
-parser_get_interview_session = api.parser()
-parser_get_interview_session.add_argument('interview_id', type=str, help='unique identifier for a single interview', required=True, default='DS001')
-parser_get_interview_session.add_argument('interviewee_id', type=str, help='unique identifier for the interviewee (applicant)', required=True, default='elon_musk')
-parser_get_interview_session.add_argument('tot_time', type=int, help='total time for the interfiew (minute)', required=True, default=30)
+parser_put_interview_session = api.parser()
+parser_put_interview_session.add_argument('interview_id', type=str, help='unique identifier for a single interview', required=True, default='DS001')
+parser_put_interview_session.add_argument('interviewee_id', type=str, help='unique identifier for the interviewee (applicant)', required=True, default='elon_musk')
+parser_put_interview_session.add_argument('tot_time', type=int, help='total time for the interfiew (minute)', required=True, default=30)
 
 @ns_model.route('/interview_session/')
 class InterviewSession(Resource):
@@ -51,12 +55,12 @@ class InterviewSession(Resource):
     # @ns.marshal_list_with(model_)
     # parser.add_argument('in_files', type=FileStorage, location='files')
     # @ns.marshal_with(model1, code=200, description='success')
-    @ns_model.expect(parser_get_interview_session)
-    def get(self):
+    @ns_model.expect(parser_put_interview_session)
+    def put(self):
         '''start or restart the interview session'''
         global STATE, model1, model2, model3
 
-        args = parser_get_interview_session.parse_args()
+        args = parser_put_interview_session.parse_args()
         try:
             if STATE:
                 STATE_HIST.append(STATE)
