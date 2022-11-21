@@ -1,6 +1,12 @@
 import http from "http";
 import { Server } from "socket.io";
+import { instrument } from "@socket.io/admin-ui";
 import express from "express";
+
+var request = require('request');
+
+const backend_url = "http://127.0.0.1:5000/";
+
 
 const app = express();
 
@@ -8,15 +14,64 @@ app.set("view engine", "pug");
 app.set("views", __dirname + "/views");
 
 app.use("/public", express.static(__dirname + "/public"));
-app.get("/", (_, res) => res.render("home"));
-app.get("/chat", (_, res) => res.render("simple_chat"));
-app.get("/*", (_, res) => res.redirect("/"));
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
+
+app.get("/", (_, res) => res.render("home"));
+app.post("/chat", (req, res) => {
+    console.log("Init ChatRoom")
+    const options = {
+        method: "PUT",
+        uri: backend_url + "model/interview_session/",        
+        qs: {
+            interview_id: req.body.roomname,
+            interviewee_id: "elon_musk",
+            tot_time: req.body.tottime,
+        }
+    };
+    
+    request(options, function(err, response, body) {
+        if(err){
+            console.log(err);
+        }
+        const msg = JSON.parse(body).msg;
+        if(msg === "succeeded") {
+            console.log(`${req.body.roomname} Room Success! tot_time: ${req.body.tottime}`);
+            res.render("simple_chat", { 
+                remaintime: req.body.tottime, 
+                roomname: req.body.roomname,
+                current_time: formatDate(new Date()),
+             });
+        } else {
+            console.log(`${req.body.roomname} Room Failed.. Please check your Backend server.`);
+            res.status(404).send('not found');
+        }        
+    });
+});
+// app.get("/*", (_, res) => res.redirect("/"));
+
+function formatDate(date) {
+    const h = "0" + date.getHours();
+    const m = "0" + date.getMinutes();
+  
+    return `${h.slice(-2)}:${m.slice(-2)}`;
+  }
 
 const handleListen = () => console.log("Listening on http://localhost:3000");
 
 const httpServer = http.createServer(app);
-const wsServer = new Server(httpServer);
+const wsServer = new Server(httpServer, {
+    cors: {
+        origin: ["https://admin.socket.io"],
+        credentials: true,
+    },
+});
+
+instrument(wsServer, {
+    auth: false,
+});
+
 
 function publicRooms() {
     const {
@@ -60,28 +115,5 @@ wsServer.on("connection", (socket) => {
     socket.on("nickname", (nickname) => socket["nickname"] = nickname);
 });
 
-
-
-
-/* 
-const sockets = [];
-wss.on("connection", (socket) => {
-    sockets.push(socket);
-    socket["nickname"] = "Anonymous";
-    console.log("Connected to Browser ✅");
-    socket.on("close", onSocketClose);
-    socket.on("message", (msg) => {
-        const message = JSON.parse(msg);
-        switch(message.type) {
-            case "new_message":
-                sockets.forEach(aSocket => 
-                    aSocket.send(`${socket.nickname}: ${message.payload}`));
-            case "nickname":
-                socket["nickname"] = message.payload;
-        }
-        
-    });
-});
-*/
 
 httpServer.listen(3000, handleListen);

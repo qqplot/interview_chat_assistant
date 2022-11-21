@@ -1,6 +1,14 @@
+const socket = io();
+
 const msgerForm = get(".msger-inputarea");
 const msgerInput = get(".msger-input");
 const msgerChat = get(".msger-chat");
+let roomName = document.getElementById("roomname").innerText;
+let round = 0;
+let questionList = [];
+let isFollowUp = false;
+
+const backend_url = "http://127.0.0.1:5000/";
 
 const BOT_MSGS = [
   "Hi, how are you?",
@@ -11,27 +19,100 @@ const BOT_MSGS = [
 ];
 
 // Icons made by Freepik from www.flaticon.com
-const BOT_IMG = "https://image.flaticon.com/icons/svg/327/327779.svg";
-const PERSON_IMG = "https://image.flaticon.com/icons/svg/145/145867.svg";
-const BOT_NAME = "BOT";
-const PERSON_NAME = "Sajad";
+const BOT_IMG = "https://www.svgrepo.com/show/285249/robot.svg";
+const PERSON_IMG = "https://www.svgrepo.com/show/110198/boy.svg";
+const BOT_NAME = "Interview Assistant";
+const PERSON_NAME = "You";
 
-msgerForm.addEventListener("submit", event => {
+socket.emit("enter_room", roomName, initRoom);
+
+function initRoom() {
+
+  msgerForm.addEventListener("submit", handleMessageSubmit);
+  requestQuestion();   
+}
+
+
+
+function requestQuestion(question, answer, interview_id=roomName, is_follow_up=false) {
+  
+  let url = backend_url + "model/question/";
+  let options;
+  if(round == 0) {
+    options = {
+      interview_id: interview_id,
+      is_follow_up: is_follow_up,
+    };
+  } else {
+    options = {
+      question: question,
+      answer: answer,
+      interview_id: interview_id,
+      is_follow_up: is_follow_up,
+    };
+  }
+
+  let data = Object.entries(options);
+  data = data.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`);
+  
+  let query = data.join('&');
+  url = url + "?" + query;
+  console.log(url);
+
+  async function request() {
+    const response = await fetch(url,
+    {
+      method: 'GET',
+      Origin: 'http://localhost:3000'
+    });
+    const data = await response.json();
+    console.log(data)
+    questionList.concat(data);
+  }
+  request();
+
+}
+
+
+
+function handleMessageSubmit(event) {
   event.preventDefault();
-
   const msgText = msgerInput.value;
   if (!msgText) return;
 
-  appendMessage(PERSON_NAME, PERSON_IMG, "right", msgText);
-  msgerInput.value = "";
+  switch(msgText) {
+    case '1':
+      requestQuestion();
+      break;
+  
+    case '2':
+      requestAny();
+      break;
+  
+    default:
+      requestQuestion();      
+      break;
+  }
 
+  socket.emit("new_message", msgerInput.value, roomName, () => {
+      appendMessage(PERSON_NAME, PERSON_IMG, "right", msgText);
+  });
+  msgerInput.value = "";
   botResponse();
-});
+}
+
+function requestAny() {
+  console.log("call 'requestAny()'...");
+  let msg_id = "bot-" + 0;
+  document.getElementById(msg_id).style.display = "none";
+}
+
 
 function appendMessage(name, img, side, text) {
   //   Simple solution for small apps
+  let msg_id = "bot-" + round;
   const msgHTML = `
-    <div class="msg ${side}-msg">
+    <div class="msg ${side}-msg" id="${msg_id}">
       <div class="msg-img" style="background-image: url(${img})"></div>
 
       <div class="msg-bubble">

@@ -1,7 +1,7 @@
 {
-  "name": "zoom-cl",
+  "name": "p4ds_grp5",
   "version": "1.0.0",
-  "description": "Zoom Clone using NodeJS, WebRTC and Websockets.",
+  "description": "Interview Assistant using NodeJS, WebRTC and Websockets.",
   "author": "qqplot",
   "license": "MIT",
   "scripts": {
@@ -15,8 +15,10 @@
     "nodemon": "^2.0.20"
   },
   "dependencies": {
+    "@socket.io/admin-ui": "^0.5.1",
     "express": "^4.18.2",
     "pug": "^3.0.2",
+    "request": "^2.88.2",
     "socket.io": "^4.5.3",
     "ws": "^8.11.0"
   }
