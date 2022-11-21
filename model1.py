@@ -11,7 +11,7 @@ class Model1:
         해당 DB로부터 자료를 가져오는 식으로 구현하였음
         '''
 
-        self.q_result = list() #모델1의 최종 결과물
+        self.q_result = {} #모델1의 최종 결과물
         '''
         self.q_result
         - model1의 결과물(question list generated from model 1(cv, jd based)) -> model2로 보낸다.
@@ -189,8 +189,8 @@ class Model1:
                             'source' : 'cvjd',
                             'tag_lv0' : 'experties',
                             'tag_lv1' : 'knowledge'} ] }
-        result = sample_result
-        return result
+        self.q_result = sample_result
+        return self.q_result
 
 
     def get(self, params):
