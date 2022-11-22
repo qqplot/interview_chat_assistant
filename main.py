@@ -63,9 +63,6 @@ class InterviewSession(Resource):
         try:
             if STATE:
                 STATE_HIST.append(STATE)
-                # model1 = Model1()
-                # model2 = Model2()
-                # model3 = Model3()
                 del model1, model2, model3
             model1, model2, model3 = Model1(), Model2(), Model3()
             model3.get({'tx': 'follow'})
@@ -114,8 +111,7 @@ class Question(Resource):
             args_to_backend['rem_time'] = STATE['rem_time']
             if STATE['round'] == 0:
                 if args['is_follow_up']:
-                    # return {'msg': 'at least one question should have been picked by the interviewer'}, 400
-                    return {'msg': 'at least 2 questions should have been picked by the interviewer'}, 400 # FIXME: at least 2, right?
+                    return {'msg': 'at least one question should have been picked by the interviewer'}, 400
 
                 args_to_backend['tx'] = 'runm1'
                 temp = args_to_backend['interviewee_id'] # FIXME: dummy interviewee_id injection
@@ -141,13 +137,6 @@ class Question(Resource):
                     response.headers.add('Access-Control-Allow-Origin', '*')
                     return response
                 if args['is_follow_up']:
-                    if STATE['round'] <= 1:
-                        # return {'msg': 'at least one question should have been picked by the interviewer'}, 400
-                        # return {'msg': 'at least 2 questions should have been picked by the interviewer'}, 400 # FIXME: at least 2, right?
-                        response = make_response(jsonify({'msg': 'at least 2 questions should have been picked by the interviewer'}), 400)
-                        response.headers.add('Access-Control-Allow-Origin', '*')
-                        return response
-
                     args_to_backend['tx'] = 'pickq'
                     args_to_backend['from'] = 'interviewer'
                     args_to_backend['info'] = {'flag': 0, 'question': args['question']} # FIXME: flag
@@ -265,4 +254,7 @@ if __name__ == '__main__':
     if os.path.exists('debug'):
         app.run(debug=True)
     else:
+        print(" * Serving Flask app 'main'")
+        print('NOTICE: This is a production and test server.')
+        print(' * Running on http://127.0.0.1:5000')
         serve(app, host='127.0.0.1', port=5000)
