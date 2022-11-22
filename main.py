@@ -114,10 +114,7 @@ class Question(Resource):
                     return {'msg': 'at least one question should have been picked by the interviewer'}, 400
 
                 args_to_backend['tx'] = 'runm1'
-                temp = args_to_backend['interviewee_id'] # FIXME: dummy interviewee_id injection
-                args_to_backend['interviewee_id'] = 'Rachel_Lee' # FIXME: dummy interviewee_id injection
                 ret = model1.get(args_to_backend)
-                args_to_backend['interviewee_id'] = temp # FIXME: dummy interviewee_id injection
 
                 args_to_backend['cvjdq'] = ret['qfromcvjd']
                 args_to_backend['tx'] = 'set_initial_with_example'
