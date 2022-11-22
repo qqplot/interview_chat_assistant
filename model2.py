@@ -185,10 +185,10 @@ class Model2:
         #############################
 
         # (initial info) 면접평가표의 평가문항(optional한 부분이나 시나리오를 위해 필요할 것으로 생각됨)
-        self.exampleSection = ['intro', 'experience', 'knowledge', 'experties', 'relationship']
+        self.exampleSection = ['intro', 'general', 'experience', 'knowledge', 'experties', 'relationship']
         self.example_total_time = 25 #총 면접시간(분)
-        self.example_timeperqa_bysection = [2, 2, 2, 2, 2] #평가항목별 qa 1loop 소요시간(분) / 문항수 count시 고려
-        self.example_section_ratio = [10, 30, 20, 40, 0] #평가항목별 평가비중(합계100) / 문항수 배분에 사용 / 예시) [25, 25, 30, 20]
+        self.example_timeperqa_bysection = [2, 2, 2, 2, 2, 2] #평가항목별 qa 1loop 소요시간(분) / 문항수 count시 고려
+        self.example_section_ratio = [5, 10, 20, 20, 25, 20] #평가항목별 평가비중(합계100) / 문항수 배분에 사용 / 예시) [25, 25, 30, 20]
 
         # init argument : question bank 전체(dict)
         self.example_q_from_bank = { 'qfrombank' : 
@@ -751,29 +751,35 @@ class Model2:
             #                         info_jd = self.example_info_jd,
             #                         )
 
-            # 초기값 셋팅 테스트중 
-
             # q_from_bank
             df = pd.read_csv('./model2/bank.csv', encoding='euc-kr')
             columns = df.columns[:-1]
-            q_from_bank = { 'qfrombank' : df[columns].to_dict(orient='records') }
+            self.q_from_bank = { 'qfrombank' : df[columns].to_dict(orient='records') }
 
-            Section = ['intro', 'general', 'experience', 'knowledge', 'experties', 'relationship']
-            section_ratio = [5, 10, 20, 20, 25, 20] #평가항목별 평가비중(합계100) / 문항수 배분에 사용 / 예시) [25, 25, 30, 20]
+            self.section = ['intro', 'general', 'experience', 'knowledge', 'experties', 'relationship']
+            self.section_ratio = [5, 10, 20, 20, 25, 20] #평가항목별 평가비중(합계100) / 문항수 배분에 사용 / 예시) [25, 25, 30, 20]
             # total_time = 40 #총 면접시간(분)
-            total_time = params['tot_time'] #총 면접시간(분)
-            timeperqa_bysection = [2, 2, 2, 2, 2, 2] #평가항목별 qa 1loop 소요시간(분) / 문항수 count시 고려
+            self.total_time = params['tot_time'] #총 면접시간(분)
             
+            self.timeperqa_bysection = [2, 2, 2, 2, 2, 2] #평가항목별 qa 1loop 소요시간(분) / 문항수 count시 고려
+            
+            # ★need to update
+            self.info_cv = self.example_info_cv # need to update★
+            self.info_jd = self.example_info_jd # need to update★
 
-            self.set_initial_state (section = Section, 
-                                    section_ratio = section_ratio, 
-                                    total_time = total_time, 
-                                    timeperqa_bysection = timeperqa_bysection,
-                                    q_from_bank = q_from_bank, 
-                                    q_from_cvjd = self.example_q_from_cvjd,
-                                    info_cv = self.example_info_cv, 
-                                    info_jd = self.example_info_jd,
+
+            # q_from_cvjd 받아오기
+            self.q_from_cvjd = { 'qfromcvjd' : params['cvjdq'] }
+            self.set_initial_state (section = self.section, 
+                                    section_ratio = self.section_ratio, 
+                                    total_time = self.total_time, 
+                                    timeperqa_bysection = self.timeperqa_bysection,
+                                    q_from_bank = self.q_from_bank, 
+                                    q_from_cvjd = self.q_from_cvjd,
+                                    info_cv = self.info_cv, 
+                                    info_jd = self.info_jd
                                     )
+            
 
             # initial context 계산(cv, jd 정보 이용)
             self.set_initial_context()
@@ -792,7 +798,8 @@ class Model2:
             print('-------   done   -------\n')
 
             print('\n----------- SET_INITIAL_WITH_EXAMPLE ends with returns ------------\n')
-
+            self.update_with_time_left()
+            print('1')
             #return은 프론트에서 사용가능한 Q 목록임(dictionary)
             return self.makeQforFront(ordering_section_first = True, num = 2)
 
