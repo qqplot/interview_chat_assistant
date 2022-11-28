@@ -5,8 +5,6 @@ import express from "express";
 
 var request = require('request');
 
-const backend_url = "http://127.0.0.1:5000/";
-
 
 const app = express();
 
@@ -21,15 +19,11 @@ app.use(express.json());
 app.get("/", (_, res) => res.render("home"));
 app.post("/chat", (req, res) => {
     console.log("Init ChatRoom")
-    const options = {
-        method: "PUT",
-        uri: backend_url + "model/interview_session/",        
-        qs: {
-            interview_id: req.body.roomname,
-            interviewee_id: "elon_musk",
-            tot_time: req.body.tottime,
-        }
-    };
+    const options = makeOption("PUT", "/model/interview_session/", {
+        interview_id: req.body.roomname,
+        interviewee_id: "Rachel_Lee",
+        tot_time: req.body.tottime,
+    });
     
     request(options, function(err, response, body) {
         if(err){
@@ -49,7 +43,63 @@ app.post("/chat", (req, res) => {
         }        
     });
 });
-// app.get("/*", (_, res) => res.redirect("/"));
+
+app.get("/model/question/", (req, res) => {
+
+    const options = makeOption("GET", "/model/question/", req.query);
+
+    request(options, function(err, response, body) {
+        if(err){
+            console.log(err);
+        }
+        let questions = JSON.parse(body);
+        if(!isEmptyArr(questions)) {
+            console.log(`Qeustion generation Success!`);
+            res.json({ok: true, data: questions});
+        } else {
+            console.log(`Qeustion generation Failed..`);
+            res.json({ok: false, data: []});
+        }        
+    });
+
+});
+
+
+
+app.get("/model/config/", (req, res) => {
+
+    const options = makeOption("GET", "/model/config/", req.query);
+
+    request(options, function(err, response, body) {
+        if(err){
+            console.log(err);
+        }
+        let config = JSON.parse(body);
+        if(config) {
+            console.log(`Model config get!`);
+            res.json({ok: true, data: config});
+        } else {
+            console.log(`Model config get Failed..`);
+            res.status(404).send('not found');
+        }        
+    });
+
+});
+
+
+
+function makeOption(method, uri, qs) {
+    const backend_url = "http://127.0.0.1:5000";
+    const url = backend_url + uri;
+
+    return {
+        method: method,
+        uri: url,        
+        qs: qs
+    };
+}
+
+
 
 function formatDate(date) {
     const h = "0" + date.getHours();
@@ -114,6 +164,14 @@ wsServer.on("connection", (socket) => {
     });
     socket.on("nickname", (nickname) => socket["nickname"] = nickname);
 });
+
+function isEmptyArr(arr) {
+    if(Array.isArray(arr) && arr.length === 0)  {
+      return true;
+    }
+    
+    return false;
+};
 
 
 httpServer.listen(3000, handleListen);
