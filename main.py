@@ -1,14 +1,19 @@
 # TODO: mashalling responses
-# TODO: middle-end logging
+# logging: https://gist.github.com/alexaleluia12/e40f1dfa4ce598c2e958611f67d28966
 # TODO: 20221120
 # * (DONE) GET config (remaining time)
 # * front-end에 추천했던 question들 중에만 pickq() 제공이 가능하도록 명시적으로 통제해야 하는지?
 # * (DONE) SET interview_session (interviewee id)
 # * (DONE) modelx not instantiated -> error handling
-from flask import Flask, jsonify, make_response
+from flask import Flask, jsonify, make_response, request
 from flask_restx import Api, Resource, fields, inputs
 from waitress import serve
 import os
+import logging
+# from time import strftime
+import io
+from contextlib import redirect_stdout, contextmanager
+import contextlib
 
 from model1 import Model1
 from model2 import Model2
@@ -40,6 +45,8 @@ EVENT_HIST = []
 
 TIME_DEC_UNIT = 2
 
+DEBUG = False
+
 model1 = model2 = model3 = None
 
 parser_put_interview_session = api.parser()
@@ -65,7 +72,8 @@ class InterviewSession(Resource):
                 STATE_HIST.append(STATE)
                 del model1, model2, model3
             model1, model2, model3 = Model1(), Model2(), Model3()
-            model3.get({'tx': 'follow'})
+            with suppress():
+                model3.get({'tx': 'follow'})
             STATE = {}
             STATE['interview_id'] = args['interview_id']
             STATE['interviewee_id'] = args['interviewee_id']
@@ -114,11 +122,13 @@ class Question(Resource):
                     return {'msg': 'at least one question should have been picked by the interviewer'}, 400
 
                 args_to_backend['tx'] = 'runm1'
-                ret = model1.get(args_to_backend)
+                with suppress():
+                    ret = model1.get(args_to_backend)
 
                 args_to_backend['cvjdq'] = ret['qfromcvjd']
                 args_to_backend['tx'] = 'set_initial_with_example'
-                ret = model2.get(args_to_backend)
+                with suppress():
+                    ret = model2.get(args_to_backend)
 
                 STATE['round'] += 1
                 # return ret
@@ -137,7 +147,8 @@ class Question(Resource):
                     args_to_backend['tx'] = 'pickq'
                     args_to_backend['from'] = 'interviewer'
                     args_to_backend['info'] = {'flag': 0, 'question': args['question']} # FIXME: flag
-                    ret = model2.get(args_to_backend) # FIXME: pickq return message handling
+                    with suppress():
+                        ret = model2.get(args_to_backend) # FIXME: pickq return message handling
                     if not ret['is_done']:
                         # return {'msg': 'failed to record the picked question to the model'}, 400
                         response = make_response(jsonify({'msg': 'failed to record the picked question to the model'}), 400)
@@ -147,22 +158,26 @@ class Question(Resource):
                     args_to_backend['tx'] = 'answerq'
                     args_to_backend['from'] = 'interviewee'
                     args_to_backend['info'] = {'flag': 0, 'answer': args['answer']} # FIXME: flag
-                    _ = model2.get(args_to_backend) # the result is not used (ignored)
+                    with suppress():
+                        _ = model2.get(args_to_backend) # the result is not used (ignored)
 
                     args_to_backend['tx'] = 'request_for_followup_q'
-                    ret = model2.get(args_to_backend)
+                    with suppress():
+                        ret = model2.get(args_to_backend)
 
                     args_to_backend['tx'] = 'answerq'
                     args_to_backend['from'] = 'interviewee'
                     args_to_backend['info'] = ret
                     args_to_backend['info']['flag'] = 0 # FIXME: flag
-                    ret = model3.get(args_to_backend)
+                    with suppress():
+                        ret = model3.get(args_to_backend)
 
                     args_to_backend['tx'] = 'receive_followup_q'
                     del args_to_backend['from']
                     del args_to_backend['info']
                     args_to_backend.update({'fq': dict(zip(range(1, 3 + 1), ret))})
-                    ret = model2.get(args_to_backend)
+                    with suppress():
+                        ret = model2.get(args_to_backend)
 
                     STATE['round'] += 1
                     # return ret
@@ -173,7 +188,8 @@ class Question(Resource):
                     args_to_backend['tx'] = 'pickq'
                     args_to_backend['from'] = 'interviewer'
                     args_to_backend['info'] = {'flag': 0, 'question': args['question']} # FIXME: flag
-                    ret = model2.get(args_to_backend) # FIXME: pickq return message handling
+                    with suppress():
+                        ret = model2.get(args_to_backend) # FIXME: pickq return message handling
                     if not ret['is_done']:
                         # return {'msg': 'failed to record the picked question to the model'}, 400
                         response = make_response(jsonify({'msg': 'failed to record the picked question to the model'}), 400)
@@ -183,7 +199,8 @@ class Question(Resource):
                     args_to_backend['tx'] = 'answerq'
                     args_to_backend['from'] = 'interviewee'
                     args_to_backend['info'] = {'flag': 0, 'answer': args['answer']} # FIXME: flag
-                    ret = model2.get(args_to_backend)
+                    with suppress():
+                        ret = model2.get(args_to_backend)
 
                     STATE['round'] += 1
                     # return ret
@@ -247,11 +264,42 @@ class IntervieweeAnalysis(Resource):
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
 
+@app.after_request
+def after_request(response):
+    # timestamp = strftime('[%Y-%b-%d %H:%M]')
+    # logger.info('%s %s %s %s %s %s %s', timestamp, request.remote_addr, request.method, request.scheme, request.full_path, response.status, response.data)
+    logger.info('%s %s %s %s %s %s', request.remote_addr, request.method, request.scheme, request.full_path, response.status, response.data)
+    return response
+
+@contextmanager
+def suppress():
+    if not DEBUG:
+        with open(os.devnull, "w") as null:
+            with redirect_stdout(null):
+                yield
+    else:
+        yield contextlib.nullcontext
+
+
 if __name__ == '__main__':
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
+    file_handler = logging.FileHandler("./main.log")
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+
+    DEBUG = False
     if os.path.exists('debug'):
+        DEBUG = True
+
+    if DEBUG:
         app.run(debug=True)
     else:
-        print(" * Serving Flask app 'main'")
-        print('NOTICE: This is a production and test server.')
-        print(' * Running on http://127.0.0.1:5000')
+        logger.info(" * Serving Flask app 'main'")
+        logger.info('NOTICE: This is a production and test server.')
+        logger.info(' * Running on http://127.0.0.1:5000')
         serve(app, host='127.0.0.1', port=5000)
