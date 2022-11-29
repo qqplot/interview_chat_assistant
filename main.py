@@ -268,7 +268,10 @@ class IntervieweeAnalysis(Resource):
 def after_request(response):
     # timestamp = strftime('[%Y-%b-%d %H:%M]')
     # logger.info('%s %s %s %s %s %s %s', timestamp, request.remote_addr, request.method, request.scheme, request.full_path, response.status, response.data)
-    logger.info('%s %s %s %s %s %s', request.remote_addr, request.method, request.scheme, request.full_path, response.status, response.data)
+    if request.full_path.startswith(('/?', '/swagger')):
+        logger.info('%s %s %s %s %s', request.remote_addr, request.method, request.scheme, request.full_path, response.status)
+    else:
+        logger.info('%s %s %s %s %s %s', request.remote_addr, request.method, request.scheme, request.full_path, response.status, response.data)
     return response
 
 @contextmanager
