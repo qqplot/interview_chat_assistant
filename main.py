@@ -53,6 +53,7 @@ parser_put_interview_session = api.parser()
 parser_put_interview_session.add_argument('interview_id', type=str, help='unique identifier for a single interview', required=True, default='DS001')
 parser_put_interview_session.add_argument('interviewee_id', type=str, help='unique identifier for the interviewee (applicant)', required=True, default='Rachel_Lee')
 parser_put_interview_session.add_argument('tot_time', type=int, help='total time for the interfiew (minute)', required=True, default=30)
+parser_put_interview_session.add_argument('cue', type=str, help='cue', default='')
 
 @ns_model.route('/interview_session/')
 class InterviewSession(Resource):
@@ -80,6 +81,7 @@ class InterviewSession(Resource):
             STATE['tot_time'] = args['tot_time']
             STATE['rem_time'] = STATE['tot_time']
             STATE['round'] = 0
+            STATE['cue'] = args['cue']
             # return {'msg': 'succeeded'}
             response = make_response(jsonify({'msg': 'succeeded'}), 200)
             response.headers.add('Access-Control-Allow-Origin', '*')
@@ -117,6 +119,7 @@ class Question(Resource):
             args_to_backend['interviewee_id'] = STATE['interviewee_id']
             args_to_backend['tot_time'] = STATE['tot_time']
             args_to_backend['rem_time'] = STATE['rem_time']
+            args_to_backend['cue'] = STATE['cue']
             if STATE['round'] == 0:
                 if args['is_follow_up']:
                     return {'msg': 'at least one question should have been picked by the interviewer'}, 400
@@ -216,6 +219,7 @@ class Question(Resource):
 parser_put_config = api.parser()
 # parser_put_config.add_argument('interview_id', type=str, help='unique identifier for a single interview', required=True, default='DS001')
 # parser_put_config.add_argument('tot_time', type=int, help='total time for the interfiew (minute)', required=True, default=30)
+parser_put_config.add_argument('cue', type=str, help='cue', default='')
 
 parser_get_config = api.parser()
 # parser_get_config.add_argument('interviewee_id', type=str, help='unique identifier for the interviewee (applicant)', required=True, default='elon_musk')
@@ -232,7 +236,11 @@ class Config(Resource):
         '''(UNDER CONSTRUCTION) register all or some of configurations to the middle-end and model'''
         args = parser_put_config.parse_args()
         # return {'msg': 'under construction'}, 404
-        response = make_response(jsonify({'msg': 'under construction'}), 404)
+        try:
+            STATE['cue'] = args['cue']
+            response = make_response(jsonify({'msg': 'succeeded'}), 200)
+        except Exception:
+            response = make_response(jsonify({'msg': 'error occurred'}), 400)
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
 
