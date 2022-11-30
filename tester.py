@@ -5,23 +5,31 @@ from IPython.display import display
 pd.set_option('display.max_colwidth', 1000)
 
 class Tester:
-    def __init__(self, interview_id, applicant_id, tot_time=30):
+    def __init__(self, interview_id, applicant_id, position, tot_time=30, sec_time_arr=None, cue=None):
         self.interview_id = interview_id
         self.interviewee_id = applicant_id
+        self.position = position
         self.tot_time = tot_time
+        self.sec_time_arr = sec_time_arr
+        self.cue = cue
         self.history = []
         self._create_session()
 
     def _create_session(self):
-
         print('iterview_id', self.interview_id)
         print('iterviewee_id', self.interviewee_id)
+        print('position', self.position)
         print('tot_time', self.tot_time)
+        print('sec_time_arr', self.sec_time_arr)
+        print('cue', self.cue)
 
         params = {
             'interview_id': self.interview_id,
             'interviewee_id': self.interviewee_id,
+            'position': self.position,
             'tot_time': self.tot_time,
+            'sec_time_arr': self.sec_time_arr,
+            'cue': self.cue,
         }
         response = requests.put('http://127.0.0.1:5000/model/interview_session/', params=params)
         df_res = pd.DataFrame(response.json(), index=[0])

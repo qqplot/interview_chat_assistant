@@ -52,7 +52,9 @@ model1 = model2 = model3 = None
 parser_put_interview_session = api.parser()
 parser_put_interview_session.add_argument('interview_id', type=str, help='unique identifier for a single interview', required=True, default='DS001')
 parser_put_interview_session.add_argument('interviewee_id', type=str, help='unique identifier for the interviewee (applicant)', required=True, default='Rachel_Lee')
-parser_put_interview_session.add_argument('tot_time', type=int, help='total time for the interfiew (minute)', required=True, default=30)
+parser_put_interview_session.add_argument('position', type=str, help='position to which the interviewee (applicant) apply', required=True, default='Data Scientist')
+parser_put_interview_session.add_argument('tot_time', type=int, help='total time for the interview (minute)', required=True, default=30)
+parser_put_interview_session.add_argument('sec_time_arr', type=str, help='time arrangement for sections (ordered)', required=False, default='intro:5;programmingskill:10;experience:20;personality:20;expertise:25;knowledge:20')
 parser_put_interview_session.add_argument('cue', type=str, help='cue', default='')
 
 @ns_model.route('/interview_session/')
@@ -82,6 +84,12 @@ class InterviewSession(Resource):
             STATE['rem_time'] = STATE['tot_time']
             STATE['round'] = 0
             STATE['cue'] = args['cue']
+            STATE['position'] = args['position']
+            if args.get('sec_time_arr'):
+                STATE['sec_time_arr'] = args.get('sec_time_arr')
+            else:
+                STATE['sec_time_arr'] = 'intro:20;programmingskill:20;experience:20;personality:20;expertise:20;knowledge:20'
+            STATE['sec_time_arr'] = [tuple(i.split(':')) for i in STATE['sec_time_arr'].split(';')]
             # return {'msg': 'succeeded'}
             response = make_response(jsonify({'msg': 'succeeded'}), 200)
             response.headers.add('Access-Control-Allow-Origin', '*')
@@ -120,6 +128,8 @@ class Question(Resource):
             args_to_backend['tot_time'] = STATE['tot_time']
             args_to_backend['rem_time'] = STATE['rem_time']
             args_to_backend['cue'] = STATE['cue']
+            args_to_backend['position'] = STATE['position']
+            args_to_backend['sec_time_arr'] = STATE['sec_time_arr']
             if STATE['round'] == 0:
                 if args['is_follow_up']:
                     return {'msg': 'at least one question should have been picked by the interviewer'}, 400
@@ -233,9 +243,8 @@ class Config(Resource):
     # @ns.marshal_with(model1, code=200, description='success')
     @ns_model.expect(parser_put_config)
     def put(self):
-        '''(UNDER CONSTRUCTION) register all or some of configurations to the middle-end and model'''
+        '''register all or some of configurations to the middle-end and model'''
         args = parser_put_config.parse_args()
-        # return {'msg': 'under construction'}, 404
         try:
             STATE['cue'] = args['cue']
             response = make_response(jsonify({'msg': 'succeeded'}), 200)
