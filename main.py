@@ -14,6 +14,7 @@ import logging
 import io
 from contextlib import redirect_stdout, contextmanager
 import contextlib
+import pandas as pd
 
 from model1 import Model1
 from model2 import Model2
@@ -142,6 +143,7 @@ class Question(Resource):
                 args_to_backend['tx'] = 'set_initial_with_example'
                 with suppress():
                     ret = model2.get(args_to_backend)
+                    EVENT_HIST.append([ret])
 
                 STATE['round'] += 1
                 # return ret
@@ -162,6 +164,7 @@ class Question(Resource):
                     args_to_backend['info'] = {'flag': 0, 'question': args['question']} # FIXME: flag
                     with suppress():
                         ret = model2.get(args_to_backend) # FIXME: pickq return message handling
+                        # EVENT_HIST[-1].append(args_to_backend)
                     if not ret['is_done']:
                         # return {'msg': 'failed to record the picked question to the model'}, 400
                         response = make_response(jsonify({'msg': 'failed to record the picked question to the model'}), 400)
@@ -191,6 +194,9 @@ class Question(Resource):
                     args_to_backend.update({'fq': dict(zip(range(1, 3 + 1), ret))})
                     with suppress():
                         ret = model2.get(args_to_backend)
+                        # EVENT_HIST[-1].append(args_to_backend)
+                        EVENT_HIST[-1].append(args)
+                        EVENT_HIST.append([ret])
 
                     STATE['round'] += 1
                     # return ret
@@ -203,6 +209,7 @@ class Question(Resource):
                     args_to_backend['info'] = {'flag': 0, 'question': args['question']} # FIXME: flag
                     with suppress():
                         ret = model2.get(args_to_backend) # FIXME: pickq return message handling
+                        # EVENT_HIST[-1].append(args_to_backend)
                     if not ret['is_done']:
                         # return {'msg': 'failed to record the picked question to the model'}, 400
                         response = make_response(jsonify({'msg': 'failed to record the picked question to the model'}), 400)
@@ -214,6 +221,9 @@ class Question(Resource):
                     args_to_backend['info'] = {'flag': 0, 'answer': args['answer']} # FIXME: flag
                     with suppress():
                         ret = model2.get(args_to_backend)
+                        # EVENT_HIST[-1].append(args_to_backend)
+                        EVENT_HIST[-1].append(args)
+                        EVENT_HIST.append([ret])
 
                     STATE['round'] += 1
                     # return ret
@@ -278,6 +288,36 @@ class IntervieweeAnalysis(Resource):
         args = parser_get_interviewee_analysis.parse_args()
         # return {'msg': 'under construction'}, 404
         response = make_response(jsonify({'msg': 'under construction'}), 404)
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
+
+parser_get_summary = api.parser()
+@ns_model.route('/summary/')
+class Summary(Resource):
+    '''Shows ...'''
+    # @ns.doc('list_...')
+    # @ns.marshal_list_with(model_)
+    # parser.add_argument('in_files', type=FileStorage, location='files')
+    # @ns.marshal_with(model1, code=200, description='success')
+    @ns_model.expect(parser_get_summary)
+    def get(self):
+        '''get summary of questions and answers from the interview'''
+        args = parser_get_summary.parse_args()
+        # response = make_response(jsonify({'msg': 'under construction'}), 404)
+        acc_qa = []
+        for evt in EVENT_HIST:
+            if len(evt) < 2: # in case of model errors, evt[1] can be non-existent
+                continue
+            q = evt[1]['question']
+            # q = pd.DataFrame(evt[0]).query(f"question == '{q}'")[['question', 'score', 'section', 'source']].to_dict(orient='records')[0]
+            df_q = pd.DataFrame(evt[0])
+            q = df_q[df_q.question == q][['question', 'score', 'section', 'source']].to_dict(orient='records')[0]
+            a = evt[1]['answer']
+            a = {'answer': a}
+            acc_qa.append(q)
+            acc_qa.append(a)
+
+        response = make_response(jsonify(acc_qa))
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
 

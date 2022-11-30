@@ -77,5 +77,14 @@ class Tester:
         return df_res
 
     def report(self):
-        for i in self.history:
-            print(i)
+        # for i in self.history:
+        #     print(i)
+        response = requests.get('http://127.0.0.1:5000/model/summary/')
+        try:
+            df_res = pd.DataFrame(response.json())
+        except ValueError as ve:
+            df_res = pd.DataFrame(response.json(), index=[0])
+        df_res.answer = df_res.answer.bfill()
+        df_res.dropna(subset='question', inplace=True)
+        df_res = df_res.reset_index(drop=True)
+        return df_res
