@@ -1,6 +1,7 @@
 import typing
 import numpy as np
 import pandas as pd
+import sqlite3
 from sentence_transformers import SentenceTransformer  #sentence_transformers 설치 필요
 # from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline #transformers 설치필요 #자동 응답용
 
@@ -76,7 +77,7 @@ class Model2:
                 {'factor' : 'Responsibilities', 'contents' : 'Enhancing data collection procedures to include information that is relevant for building analytic systems'} ]
         '''
 
-
+        self.db_filepath = './model2/bank.sqlite'
 
         ####################################################################
         ### variables for calculating the number of questions for front  ###
@@ -464,7 +465,17 @@ class Model2:
             # section에 순서를 부여해주고(score가 descending이라 역순으로 부여)
             tmp_order = dict( zip(self.section, range(len(self.section), 0, -1)))
             # column value 부여
-            df['section_tmp_order'] = pd.DataFrame([ tmp_order[name] for name in df['section']])
+            # df['section_tmp_order'] = pd.DataFrame([ tmp_order[name] for name in df['section']])
+            # column value 부여
+            res = []
+            for sec in df['section'] :
+                if sec in tmp_order.keys() :
+                    res.append(tmp_order[sec])
+                else :
+                    res.append(999)
+            df['section_tmp_order'] = pd.DataFrame(res)
+
+            
             # sort
             df.sort_values(by=['section_tmp_order', 'score'], axis = 0, ascending = False, inplace = True)
         else : #section 구분 없이 score로만 sort
@@ -574,8 +585,14 @@ class Model2:
         self.answer_history.append(self.answer_now['answer'])
 
         # context 계산 후 업데이트 ※ 세부구현 필요 (Q만 가지고 update하는게 맞을지 의문, A와 조화를 이뤄야할듯)
-        context = self.embed_model.encode(self.answer_now['answer'])
-        print(f'calculated context[:5] = {context[:5]}')
+        # context = self.embed_model.encode(self.answer_now['answer'])
+        # print(f'calculated context[:5] = {context[:5]}')
+        
+        #여러 문장으로 답변이 구성된 경우 각 문장의 context를 계산하여 더한다.
+        sentences = self.answer_now['answer']
+        trimmed_sentences = [ sentence.strip() + '.' for sentence in sentences.split('.') if len(sentence)>=3]
+        context = self.embed_model.encode(trimmed_sentences).sum(axis=0)
+        
         self.update_context(context)
 
         # Question rescoring ※ 세부구현 필요
@@ -752,21 +769,84 @@ class Model2:
             #                         )
 
             # q_from_bank
+            #임시 CSV읽기
             df = pd.read_csv('./model2/bank.csv', encoding='euc-kr')
-            columns = df.columns[:-1]
+            
+            #임시 csv자료 DB로 만들기
+            con = sqlite3.connect(self.db_filepath) #self.db_filepath = './model2/bank.sqlite'
+            df.to_sql('bank', con, index = False, if_exists = 'replace')
+            con.close()
+
+            # DB읽어오기
+            with sqlite3.connect(self.db_filepath) as con:
+                df = pd.read_sql(f'select * from bank', con)
+            columns = df.columns[:-3]
             self.q_from_bank = { 'qfrombank' : df[columns].to_dict(orient='records') }
 
-            self.section = ['intro', 'general', 'experience', 'knowledge', 'experties', 'relationship']
-            self.section_ratio = [5, 10, 20, 20, 25, 20] #평가항목별 평가비중(합계100) / 문항수 배분에 사용 / 예시) [25, 25, 30, 20]
+            # set self.section and self.section_ratio
+            sec_time_arr = params['sec_time_arr'] #format = []
+            section = []
+            section_ratio = []
+            for sec, rat in sec_time_arr :
+                section.append(sec)
+                section_ratio.append(float(rat))
+
+            self.section = section #['intro', 'general', 'experience', 'knowledge', 'experties', 'relationship']
+            self.section_ratio = section_ratio #[5, 10, 20, 20, 25, 20] #평가항목별 평가비중(합계100) / 문항수 배분에 사용 / 예시) [25, 25, 30, 20]
+            
             # total_time = 40 #총 면접시간(분)
             self.total_time = params['tot_time'] #총 면접시간(분)
             
             self.timeperqa_bysection = [2, 2, 2, 2, 2, 2] #평가항목별 qa 1loop 소요시간(분) / 문항수 count시 고려
             
             # ★need to update
-            self.info_cv = self.example_info_cv # need to update★
-            self.info_jd = self.example_info_jd # need to update★
+            # self.info_cv = self.example_info_cv # need to update★
+            # self.info_jd = self.example_info_jd # need to update★
 
+            '''cv, jd 읽어오기'''
+            # cv, jd 정보가 입력되어 있는 DB filepath
+            db_filepath = './model1/cvjd_db.sqlite' # csv를 원천자료로 할 때에는 해당 db로 만들어 활용한다(향후에는 db를 불러와 사용할 것이므로 이것을 기본으로 하여 기능 설계)
+            # DB내 table name
+            db_table_name = ['cv_app', 'cv_edu', 'cv_pro', 'cv_ski', 'cv_exh', 'jd_com', 'jd_ski']
+
+            #jd_id setting
+            interview_id = params['interview_id'] #DS001
+            if interview_id[:2] == 'DS' : jd_id = 0
+            else : jd_id = 1
+            interview_id = jd_id
+
+            #applicant_id setting
+            interviewee_id = params['interviewee_id'] #Rachel_Lee
+            with sqlite3.connect(db_filepath) as con:
+                df_row = pd.read_sql(f'select * from cv_app where applicant_name = \'{interviewee_id}\'', con)
+            applicant_id = df_row['applicant_id'][0]
+
+            dict_df = {}
+            with sqlite3.connect(db_filepath) as con:
+                for name in db_table_name : 
+                    if name[:2] == 'cv' :
+                        dict_df[name] = pd.read_sql(f'select * from {name} where applicant_id = {applicant_id}', con)
+                    else :
+                        dict_df[name] = pd.read_sql(f'select * from {name} where jd_id = {jd_id}', con)
+
+            cv_info_before = ( dict_df['cv_app']['applicant_self_description'].to_list() 
+                            + dict_df['cv_pro']['project_description'].to_list() )
+            jd_info_before = (dict_df['jd_com']['company_description'].to_list()
+                            +dict_df['jd_com']['position_name'].to_list()
+                            +dict_df['jd_com']['position_description'].to_list()
+                            +dict_df['jd_com']['responsibilities_description'].to_list())
+
+            cv_info = []
+            jd_info = []
+            for sts in cv_info_before :
+                trimmed = [ sentence.strip() + '.' for sentence in sts.split('.') if len(sentence)>=3]
+                cv_info += trimmed
+            for sts in jd_info_before :
+                trimmed = [ sentence.strip() + '.' for sentence in sts.split('.') if len(sentence)>=3]
+                jd_info += trimmed
+
+            self.info_cv = pd.DataFrame(cv_info, columns=['contents']).to_dict(orient='records')
+            self.info_jd = pd.DataFrame(jd_info, columns=['contents']).to_dict(orient='records')
 
             # q_from_cvjd 받아오기
             self.q_from_cvjd = { 'qfromcvjd' : params['cvjdq'] }
