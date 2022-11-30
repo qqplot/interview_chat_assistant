@@ -11,10 +11,12 @@ html(lang="en")
             h1 Datascience Interview Assistant
         main
             div#welcome            
-                h4 Open Rooms: 
+                h4 Applicants: 
                 ul
+                    li Daniel Manson    
+                    li Rachel Lee
                 form(action="/chat", method="post") 
-                    h4 ENTER YOUR ROOM
+                    h4 ENTER YOUR APPLICANT
                     input(type="text", name="roomname", placeholder="room name", required)
                     select(name="tottime", required)
                         option(value="" selected='' disabled='' hidden='') Select your total time
