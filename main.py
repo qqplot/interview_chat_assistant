@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # TODO: mashalling responses
 # logging: https://gist.github.com/alexaleluia12/e40f1dfa4ce598c2e958611f67d28966
 # TODO: 20221120
