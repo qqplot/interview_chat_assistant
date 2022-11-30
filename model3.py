@@ -112,7 +112,7 @@ class Model3:
 
                 print('>> Return 3 suggested question')
                 ret = []
-                if len(self.rank) > 3:
+                if len(self.rank) >= 3:
                     for i, pair in enumerate(self.rank):
                         if i < 3:
                             idx = pair[0]
@@ -126,9 +126,12 @@ class Model3:
                             ret.append(self.question[idx])
                         else:
                             break
-                elif len(self.rank) > 0 :
-                    print(i+1,'.', self.question[idx])
-                    ret.append(self.question[idx])
+                # 뽑힌 문제가 3개 미만이어도 뽑힌 질문들 내보내기
+                elif len(self.rank) < 3 :
+                    for i, pair in enumerate(self.rank):
+                        print(i+1,'.', self.question[idx])
+                        ret.append(self.question[idx])
+
                 else : #길이가 0 이면
                     ret = ['failed to generate follow-up question']
                 print('-------   done   -------\n')
