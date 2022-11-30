@@ -127,7 +127,8 @@ class Model3:
                         else:
                             break
                 # 뽑힌 문제가 3개 미만이어도 뽑힌 질문들 내보내기
-                elif len(self.rank) < 3 :
+                # elif len(self.rank) < 3 : #성문님 22.12.01. 새벽2시 버전
+                elif len(self.rank) > 0 : #용상 수정 22.12.01 새벽4시
                     for i, pair in enumerate(self.rank):
                         print(i+1,'.', self.question[idx])
                         ret.append(self.question[idx])
