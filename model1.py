@@ -188,7 +188,7 @@ class Model1:
         source = 'cvjd' 
 
         ##### 1. Skill #####
-        skill_section = 'expertise'
+        skill_section = 'programmingskill' #수정전:'expertise'
         skill_tag_lv0 = 'technical'
         skill_tag_lv1 = 'skill'
 
