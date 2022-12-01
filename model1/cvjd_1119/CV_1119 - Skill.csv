@@ -13,9 +13,9 @@ applicant_id,skill_category,skill_name,skill_level
 0,language,English,fluent
 0,language,Hindi,native
 1,programming,SQL,middle
-1,programming,Python ,high
-1,programming ,R,high
-1,visualization ,Tabelau,low
+1,programming,Python,high
+1,programming,R,high
+1,visualization,Tabelau,low
 1,language,Korean,native
 1,language,English,fluent
 1,language,French,elementary

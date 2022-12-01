@@ -5,7 +5,7 @@
 
 ## Middle-End 서버 구동
 * 환경 설정
-    - `conda create -n p4ds_grp5 python=3.10`
+    - `conda create -n p4ds_grp5 python=3.8`
     - `conda activate p4ds_grp5`
     - `pip install -r requirements.txt`
 * 구동 방법
