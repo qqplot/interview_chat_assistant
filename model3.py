@@ -103,7 +103,8 @@ class Model3:
                     print(idx+1,'.', q)  
                     ret.append(q)
                 print('-------   done   -------\n') 
-                return None
+                # return None
+                return ret
 
             else:
                 print('>> Get ranking keywords')
