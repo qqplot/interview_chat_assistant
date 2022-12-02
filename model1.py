@@ -189,8 +189,8 @@ class Model1:
 
         ##### 1. Skill #####
         skill_section = 'programmingskill' #수정전:'expertise'
-        skill_tag_lv0 = 'technical'
-        skill_tag_lv1 = 'skill'
+        skill_tag_lv0 = 'cvjd_technical' #'technical'
+        skill_tag_lv1 = 'cvjd_skill' #'skill'
 
         # Programming
         cv_skill_programming = self.df_cv_ski[self.df_cv_ski['skill_category'] == 'programming']
@@ -222,8 +222,8 @@ class Model1:
 
         ##### 2. Education #####
         education_section = 'experience'
-        education_tag_lv0 = 'general'
-        education_tag_lv1 = 'education'
+        education_tag_lv0 = 'cvjd_general' #'general'
+        education_tag_lv1 = 'cvjd_education' #'education'
         
         # final school level
         cv_school_level = self.df_cv_edu['school_level'].tolist()
@@ -264,8 +264,8 @@ class Model1:
 
         ##### 3. Work History #####
         work_section = 'experience'
-        work_tag_lv0 = 'general'
-        work_tag_lv1 = 'work history'
+        work_tag_lv0 = 'cvjd_general'#'general'
+        work_tag_lv1 = 'cvjd_work history'#work history'
         
         # position years
         duration = 0
@@ -301,8 +301,8 @@ class Model1:
 
         ##### 4. Projects #####
         project_section = 'experience'
-        project_tag_lv0 = 'technical'
-        project_tag_lv1 = 'experience'
+        project_tag_lv0 = 'cvjd_experience' #'technical'
+        project_tag_lv1 = 'cvjd_project' #'experience'
 
         case_jd_company_favored_experience = self.df_jd_com['favored_experience_keywords'][0].split(", ")
 
