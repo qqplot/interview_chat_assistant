@@ -770,8 +770,8 @@ class Model2:
 
             # q_from_bank
             #임시 CSV읽기
-            df = pd.read_csv('./model2/bank.csv', encoding='euc-kr')
-            
+            # df = pd.read_csv('./model2/bank.csv', encoding='euc-kr')
+            df = pd.read_csv('./model2/bank.csv', encoding='cp949', header=0)
             #임시 csv자료 DB로 만들기
             con = sqlite3.connect(self.db_filepath) #self.db_filepath = './model2/bank.sqlite'
             df.to_sql('bank', con, index = False, if_exists = 'replace')
