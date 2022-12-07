@@ -1,4 +1,19 @@
 section,question,source,tag_lv0,tag_lv1,tag_plus,cnt_chosen,avg_res_time
+experience,Describe a difficult bug you were tasked with fixing in a large application. How did you debug the issue?,bank,programming,perspective,SE,0,2
+knowledge,How do you explain technical challenges to a stakeholder or partner who does not have technical knowledge or backgrounds?,bank,programming,perspective,SE,0,2
+experience,Which project management tools do you feel are most useful in your role as a software engineer?,bank,programming,perspective,SE,0,2
+expertise,What are your thoughts on software testing?,bank,programming,perspective,SE,0,2
+programmingskill,"Agile, Scrum, XP, PRINCE2, Lean. Have you ever worked using any of these project methodologies? Which is your favorite and why?",bank,programming,perspective,SE,0,2
+personality,Which specific software engineering trends interest you the most?,bank,programming,perspective,SE,0,2
+experience,How do you handle project management? Which steps do you use?,bank,programming,perspective,SE,0,2
+experience,What development methodologies are you comfortable following?,bank,programming,perspective,SE,0,2
+knowledge,What is the difference between the QA and software testing?,bank,programming,perspective,SE,0,2
+knowledge,What is the software development life cycle? What are the differences between them? ,bank,programming,perspective,SE,0,2
+knowledge,What are CASE tools?,bank,programming,perspective,SE,0,2
+knowledge,What are Verification and Validation?,bank,programming,perspective,SE,0,2
+knowledge,Define black box testing and white box testing?,bank,programming,perspective,SE,0,2
+knowledge,Explain the concept of modularization.,bank,programming,perspective,SE,0,2
+knowledge,What are functional and non-functional requirements?,bank,programming,perspective,SE,0,2
 intro,Nice to meet you. Please introduce yourself briefly in 1minute.,bank,general,introduction,ALL,0,2
 intro,Please describe your skills and abilities based on the requirements listed in our job description.,bank,general,introduction,ALL,0,2
 programmingskill,"Of all the programming languages you have ever learned, please describe the most difficult programming language to learn and why.",bank,programming,perspective,ALL,0,2

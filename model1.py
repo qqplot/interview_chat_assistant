@@ -53,14 +53,14 @@ class Model1:
         '''
 
         #임시용 : csv로 작업할 때 사용할 임시용 variable
-        self.csv_path = './model1/cvjd_1119' #현재 원천자료가 있는 폴더
-        self.csv_cv_app = pd.read_csv(self.csv_path + '/CV_1119 - Applicant.csv' , encoding='euc-kr')
-        self.csv_cv_edu = pd.read_csv(self.csv_path + '/CV_1119 - Education.csv' , encoding='euc-kr')
-        self.csv_cv_pro = pd.read_csv(self.csv_path + '/CV_1119 - Projects.csv' , encoding='utf-8')
-        self.csv_cv_ski = pd.read_csv(self.csv_path + '/CV_1119 - Skill.csv' , encoding='euc-kr')
-        self.csv_cv_exp = pd.read_csv(self.csv_path + '/CV_1119 - Work Experience History.csv' , encoding='euc-kr')
-        self.csv_jd_com = pd.read_csv(self.csv_path + '/JD_1119 - Company.csv' , encoding='utf-8', delimiter =",")
-        self.csv_jd_ski = pd.read_csv(self.csv_path + '/JD_1119 - Skill.csv' , encoding='euc-kr')
+        self.csv_path = './model1/cvjd_1201' #현재 원천자료가 있는 폴더
+        self.csv_cv_app = pd.read_csv(self.csv_path + '/CV_1201 - Applicant.csv' , encoding='euc-kr')
+        self.csv_cv_edu = pd.read_csv(self.csv_path + '/CV_1201 - Education.csv' , encoding='euc-kr')
+        self.csv_cv_pro = pd.read_csv(self.csv_path + '/CV_1201 - Projects.csv' , encoding='utf-8')
+        self.csv_cv_ski = pd.read_csv(self.csv_path + '/CV_1201 - Skill.csv' , encoding='euc-kr')
+        self.csv_cv_exp = pd.read_csv(self.csv_path + '/CV_1201 - Work Experience History.csv' , encoding='euc-kr')
+        self.csv_jd_com = pd.read_csv(self.csv_path + '/JD_1201 - Company.csv' , encoding='utf-8', delimiter =",")
+        self.csv_jd_ski = pd.read_csv(self.csv_path + '/JD_1201 - Skill.csv' , encoding='euc-kr')
         self.csv_dict_df = dict(zip(self.db_table_name, [self.csv_cv_app, self.csv_cv_edu, self.csv_cv_pro, self.csv_cv_ski, self.csv_cv_exp, self.csv_jd_com, self.csv_jd_ski]))
 
 
@@ -277,7 +277,7 @@ class Model1:
         if (self.df_jd_com.position_minimum_years[0]*4 - duration) > 6:
             q_list.append({
                 'section' : work_section,
-                'question' : "We require at least {} years of experience as a {}. What makes you qualified for this job despite the lack of work experience?".format(self.df_jd_com.position_minimum_years[0], self.df_cv_app['position_name'][0]),
+                'question' : "We require at least {} years of experience as a {}. What makes you qualified for this job despite the lack of work experience?".format(self.df_jd_com.position_minimum_years[0], self.position_name),
                 'source' : source,
                 'tag_lv0' : work_tag_lv0,
                 'tag_lv1' : work_tag_lv1    

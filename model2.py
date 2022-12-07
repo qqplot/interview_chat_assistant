@@ -494,7 +494,13 @@ class Model2:
         if ordering_section_first :
             df_new = pd.DataFrame(columns = df.columns)
             for i in range(len(self.section), 0, -1) :
-                df_new = pd.concat([df_new, df[ df['section_tmp_order']==i][:self.possible_q_cnt_by_section[len(self.section)-i]] ], axis = 0) 
+                # # cvjd 질문은 count에서 빼기
+                # df_tmp = df[ df['section_tmp_order']==i ]
+                # df_tmp = df_tmp[ df_tmp['source']=='cvjd' ]
+                # # cnt = df[df[ df['section_tmp_order']==i ]['source']=='cvjd'].shape[0]
+                # cnt = df_tmp.shape[0]
+                # df_new = pd.concat([df_new, df[ df['section_tmp_order']==i][:self.possible_q_cnt_by_section[len(self.section)-i]+cnt] ], axis = 0) 
+                df_new = pd.concat([df_new, df[ df['section_tmp_order']==i][:self.possible_q_cnt_by_section[len(self.section)-i]] ], axis = 0)  ## 기존것
             df_new.reset_index(drop = True, inplace = True)
             df_new['order'] = df_new.index
             if self.follow_up_q_ready :
@@ -777,9 +783,15 @@ class Model2:
             df.to_sql('bank', con, index = False, if_exists = 'replace')
             con.close()
 
+
+            #DB선별하여 읽기
+            interview_id = params['position'] # Data Scientist
+            if interview_id == "Data Scientist" : condition = "where tag_plus = 'ALL' OR tag_plus = 'DS'"
+            else : condition = "where tag_plus = 'ALL' OR tag_plus = 'SE'"
+
             # DB읽어오기
             with sqlite3.connect(self.db_filepath) as con:
-                df = pd.read_sql(f'select * from bank', con)
+                df = pd.read_sql('select * from bank '+condition, con)
             columns = df.columns[:-3]
             self.q_from_bank = { 'qfrombank' : df[columns].to_dict(orient='records') }
 
