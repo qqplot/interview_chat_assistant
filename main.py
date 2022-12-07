@@ -54,7 +54,8 @@ model1 = model2 = model3 = None
 parser_put_interview_session = api.parser()
 parser_put_interview_session.add_argument('interview_id', type=str, help='unique identifier for a single interview', required=True, default='DS001')
 parser_put_interview_session.add_argument('interviewee_id', type=str, help='unique identifier for the interviewee (applicant)', required=True, default='Rachel_Lee')
-parser_put_interview_session.add_argument('position', type=str, help='position to which the interviewee (applicant) apply', required=True, default='Data Scientist')
+# parser_put_interview_session.add_argument('position', type=str, help='position to which the interviewee (applicant) apply', required=True, default='Data Scientist')
+parser_put_interview_session.add_argument('position', type=str, help='position to which the interviewee (applicant) apply', default='Data Scientist')
 parser_put_interview_session.add_argument('tot_time', type=int, help='total time for the interview (minute)', required=True, default=30)
 parser_put_interview_session.add_argument('sec_time_arr', type=str, help='time arrangement for sections (ordered)', required=False, default='intro:5;programmingskill:10;experience:20;personality:20;expertise:25;knowledge:20')
 parser_put_interview_session.add_argument('cue', type=str, help='cue', default='')
@@ -86,7 +87,10 @@ class InterviewSession(Resource):
             STATE['rem_time'] = STATE['tot_time']
             STATE['round'] = 0
             STATE['cue'] = args['cue']
-            STATE['position'] = args['position']
+            if args.get('position'):
+                STATE['position'] = args.get('position')
+            else:
+                STATE['position'] = 'Data Scientist'
             if args.get('sec_time_arr'):
                 STATE['sec_time_arr'] = args.get('sec_time_arr')
             else:
