@@ -810,8 +810,8 @@ class Model2:
             db_table_name = ['cv_app', 'cv_edu', 'cv_pro', 'cv_ski', 'cv_exh', 'jd_com', 'jd_ski']
 
             #jd_id setting
-            interview_id = params['interview_id'] #DS001
-            if interview_id[:2] == 'DS' : jd_id = 0
+            interview_id = params['position'] # Data Scientist
+            if interview_id == "Data Scientist" : jd_id = 0
             else : jd_id = 1
             interview_id = jd_id
 
