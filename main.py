@@ -56,8 +56,8 @@ parser_put_interview_session.add_argument('interview_id', type=str, help='unique
 parser_put_interview_session.add_argument('interviewee_id', type=str, help='unique identifier for the interviewee (applicant)', required=True, default='Rachel_Lee')
 # parser_put_interview_session.add_argument('position', type=str, help='position to which the interviewee (applicant) apply', required=True, default='Data Scientist')
 parser_put_interview_session.add_argument('position', type=str, help='position to which the interviewee (applicant) apply', default='Data Scientist')
-parser_put_interview_session.add_argument('tot_time', type=int, help='total time for the interview (minute)', required=True, default=30)
-parser_put_interview_session.add_argument('sec_time_arr', type=str, help='time arrangement for sections (ordered)', required=False, default='intro:5;programmingskill:10;experience:20;personality:20;expertise:25;knowledge:20')
+parser_put_interview_session.add_argument('tot_time', type=int, help='total time for the interview (minute)', required=True, default=20)
+parser_put_interview_session.add_argument('sec_time_arr', type=str, help='time arrangement for sections (ordered)', required=False, default='intro:5;programmingskill:10;experience:35;personality:15;expertise:20;knowledge:15')
 parser_put_interview_session.add_argument('cue', type=str, help='cue', default='')
 
 @ns_model.route('/interview_session/')
@@ -94,7 +94,7 @@ class InterviewSession(Resource):
             if args.get('sec_time_arr'):
                 STATE['sec_time_arr'] = args.get('sec_time_arr')
             else:
-                STATE['sec_time_arr'] = 'intro:20;programmingskill:20;experience:20;personality:20;expertise:20;knowledge:20'
+                STATE['sec_time_arr'] = 'intro:5;programmingskill:10;experience:35;personality:15;expertise:20;knowledge:15'
             STATE['sec_time_arr'] = [tuple(i.split(':')) for i in STATE['sec_time_arr'].split(';')]
             # return {'msg': 'succeeded'}
             response = make_response(jsonify({'msg': 'succeeded'}), 200)
