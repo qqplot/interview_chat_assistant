@@ -24,7 +24,11 @@ html(lang="en")
                         option(value="20") 20
                         option(value="30") 30
                         option(value="60") 60                    
-                    
+                    select(name="position", required)
+                        option(value="" selected='' disabled='' hidden='') Select your position
+                        option(value="Data Scientist") Data Scientist
+                        option(value="Software Engineer") Software Engineer
+
                     input(type="radio", name="isInterviewer", value="yes", checked, id="usertype1")
                     label(for="usertype1") Interviewer
                     input(type="radio", name="isInterviewer", value="no", id="usertype2") 

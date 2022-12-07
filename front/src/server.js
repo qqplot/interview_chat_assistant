@@ -18,13 +18,19 @@ app.use(express.json());
 app.get("/", (_, res) => res.render("home"));
 app.post("/chat", (req, res) => {
     console.log("Init ChatRoom")
-
-    console.log(`req.body.isInterviewer: ${req.body.isInterviewer}`);
+    const interview_id = req.body.roomname;
+    let interviewee_id;
+    
+    if(interview_id == "Rachel Lee") {
+        interviewee_id = "Rachel_Lee";
+    } else if(interview_id == "Daniel Manson") {
+        interviewee_id = "Daniel_Manson";
+    }
 
     const options = makeOption("PUT", "/model/interview_session/", {
-        interview_id: req.body.roomname,
-        interviewee_id: "Rachel_Lee",
-        position: "Data Scientist",
+        interview_id: interview_id,
+        interviewee_id: interviewee_id,
+        position: req.body.position,
         tot_time: req.body.tottime,
     });
 
@@ -51,7 +57,6 @@ app.post("/chat", (req, res) => {
 app.get("/model/question/", (req, res) => {
 
     const options = makeOption("GET", "/model/question/", req.query);
-    console.log(options);
     request(options, function(err, response, body) {
         if(err){
             console.log(err);
@@ -160,7 +165,7 @@ wsServer.on("connection", (socket) => {
     });
     socket.on("new_message", (msg, room, done) => {
         console.log(room);
-        socket.to(room).emit("new_message", `${socket.nickname}:${msg}`);
+        socket.to(room).emit("new_message", `${msg}`);
         done();
     });
     socket.on("nickname", (nickname) => socket["nickname"] = nickname);
