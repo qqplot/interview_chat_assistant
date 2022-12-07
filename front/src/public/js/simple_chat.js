@@ -7,6 +7,7 @@ const initBtn = get(".msg_init_btn");
 const quitBtn = get(".msg_quit_btn");
 
 let roomName = document.getElementById("roomname").innerText;
+let isInterviewer = document.getElementById("isInterviewer").innerText; 
 let round = 0;
 let applicant_round = 0;
 let questionList = [];
@@ -51,13 +52,59 @@ const testBtn = document.getElementById("testBtn");
 function initRoom() {
   msgerForm.addEventListener("submit", handleMessageSubmit);
   initBtn.addEventListener("click", handleInitButtonClick);
+  setUserType();
 }
+
+function setUserType() {
+  let nickname = "You"
+  if(isInterviewer == "no") {
+    nickname = roomName; // Applicant's name
+  }
+  socket.emit("nickname", nickname);
+}
+
+
+
+
 
 
 function handleInitButtonClick(event) {
   event.preventDefault();
   requestQuestion();
 }
+
+
+socket.on("new_message", applicantResponse);
+
+
+function applicantResponse(msg) {
+
+  const msgText = msg;
+  const delay = msg.split(" ").length * 100;
+
+  prev_answer = msgText;
+  let text = msgText + "<br/>";
+  text += `<button type="submit" id="follow-btn-${applicant_round}" value=true>✅ follow</button>`;
+  text += `<button type="submit" id="not-follow-btn-${applicant_round}" value=false>❌ not follow</button>`;
+
+  setTimeout(() => {
+    appendApplicantMessage(APPLICANT_NAME, APPLICANT_IMG, "left", text);
+    const follow_btn = document.getElementById(`follow-btn-${applicant_round}`);
+    const not_follow_btn = document.getElementById(`not-follow-btn-${applicant_round}`);
+    
+    follow_btn.addEventListener("click", handleFollowBtnClick);
+    not_follow_btn.addEventListener("click", handleFollowBtnClick);
+    applicant_round++;
+    refreshRemaintime();
+  }, delay);  
+}
+
+
+
+
+
+
+
 
 
 
@@ -173,28 +220,28 @@ function appendBotMessage(name, img, side, text) {
 
 
 /* Applicant */
-function applicantResponse() {
-  const r = random(0, APPLICANT_MSGS.length - 1);
-  const msgText = APPLICANT_MSGS[r];
-  // const delay = msgText.split(" ").length * 100;
-  const delay = random(1, 5) * 100;
+// function applicantResponse() {
+//   const r = random(0, APPLICANT_MSGS.length - 1);
+//   const msgText = APPLICANT_MSGS[r];
+//   // const delay = msgText.split(" ").length * 100;
+//   const delay = random(1, 5) * 100;
 
-  prev_answer = msgText;
-  let text = msgText + "<br/>";
-  text += `<button type="submit" id="follow-btn-${applicant_round}" value=true>✅ follow</button>`;
-  text += `<button type="submit" id="not-follow-btn-${applicant_round}" value=false>❌ not follow</button>`;
+//   prev_answer = msgText;
+//   let text = msgText + "<br/>";
+//   text += `<button type="submit" id="follow-btn-${applicant_round}" value=true>✅ follow</button>`;
+//   text += `<button type="submit" id="not-follow-btn-${applicant_round}" value=false>❌ not follow</button>`;
 
-  setTimeout(() => {
-    appendApplicantMessage(APPLICANT_NAME, APPLICANT_IMG, "left", text);
-    const follow_btn = document.getElementById(`follow-btn-${applicant_round}`);
-    const not_follow_btn = document.getElementById(`not-follow-btn-${applicant_round}`);
+//   setTimeout(() => {
+//     appendApplicantMessage(APPLICANT_NAME, APPLICANT_IMG, "left", text);
+//     const follow_btn = document.getElementById(`follow-btn-${applicant_round}`);
+//     const not_follow_btn = document.getElementById(`not-follow-btn-${applicant_round}`);
     
-    follow_btn.addEventListener("click", handleFollowBtnClick);
-    not_follow_btn.addEventListener("click", handleFollowBtnClick);
-    applicant_round++;
-    refreshRemaintime();
-  }, delay);  
-}
+//     follow_btn.addEventListener("click", handleFollowBtnClick);
+//     not_follow_btn.addEventListener("click", handleFollowBtnClick);
+//     applicant_round++;
+//     refreshRemaintime();
+//   }, delay);  
+// }
 
 function handleFollowBtnClick(event) {
   event.preventDefault();
