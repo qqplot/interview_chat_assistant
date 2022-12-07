@@ -3,12 +3,11 @@ const socket = io();
 const msgerForm = get(".msger-inputarea");
 const msgerInput = get(".msger-input");
 const msgerChat = get(".msger-chat");
-const initBtn = get(".msg_init_btn");
-const quitBtn = get(".msg_quit_btn");
 
 let roomName = document.getElementById("roomname").innerText;
+let isInterviewer = document.getElementById("isInterviewer").innerText; 
 let round = 0;
-let applicant_round = 0;
+let opponent_round = 0;
 let questionList = [];
 let prev_question = "";
 let prev_answer = "none";
@@ -36,28 +35,135 @@ const APPLICANT_MSGS = [
 
 // Icons made by Freepik from www.flaticon.com
 const BOT_IMG = "https://www.svgrepo.com/show/285249/robot.svg";
-const PERSON_IMG = "https://www.svgrepo.com/show/110198/boy.svg";
-const APPLICANT_IMG = "https://www.svgrepo.com/show/156605/girl.svg";
-
 const BOT_NAME = "Interview Assistant";
-const PERSON_NAME = "You";
-const APPLICANT_NAME = "Rachel Lee";
+
+const PERSON_IMGS = {
+  "interviewer" : "https://www.svgrepo.com/show/110198/boy.svg",
+  "default" : "https://www.svgrepo.com/show/135823/boy.svg",
+  "Rachel Lee" : "https://www.svgrepo.com/show/156605/girl.svg",
+  "Daniel Manson" : "https://www.svgrepo.com/show/12676/boy.svg",
+};
+
+const PERSON_NAMES = {
+  "default" : "You",
+  "Rachel Lee" : "Rachel Lee",
+  "Daniel Manson" : "Daniel Manson",
+  "interviewer" : "Interviewer",
+};
+
+let nickname;
+let yourImg;
+let yourName;
+let opponentImg;
+let opponentName;
+
 
 socket.emit("enter_room", roomName, initRoom);
 
-const testBtn = document.getElementById("testBtn");
 
 /* Init */
 function initRoom() {
+
+  nickname = "You";
+  if(isInterviewer == "yes") {
+    console.log("Init Bot Message ...");
+    nickname = "interviewer";
+    botInitResponse();
+  } else { // Applicant
+    nickname = roomName;
+  }
+
+  switch(nickname) {
+    case 'interviewer':  
+      yourImg = PERSON_IMGS["interviewer"];
+      yourName = PERSON_NAMES["default"]; // You
+      opponentImg = PERSON_IMGS[roomName];
+      opponentName = PERSON_NAMES[roomName];
+      break;
+    case 'Rachel Lee':  
+      yourImg = PERSON_IMGS['Rachel Lee'];
+      yourName = PERSON_NAMES['Rachel Lee']; 
+      opponentImg = PERSON_IMGS["interviewer"];
+      opponentName = PERSON_NAMES["interviewer"];      
+      break;
+    case 'Daniel Manson':  
+      yourImg = PERSON_IMGS['Daniel Manson'];
+      yourName = PERSON_NAMES['Daniel Manson']; 
+      opponentImg = PERSON_IMGS["interviewer"];
+      opponentName = PERSON_NAMES["interviewer"];    
+      break;  
+    default:
+      yourImg = PERSON_IMGS["default"];
+      yourName = PERSON_NAMES["default"]; 
+      opponentImg = PERSON_IMGS["interviewer"];
+      opponentName = PERSON_NAMES["interviewer"];    
+      break;
+  }
+
+  socket.emit("nickname", nickname);
   msgerForm.addEventListener("submit", handleMessageSubmit);
+}
+
+
+function botInitResponse() {
+  let msgText = "Hi, welcome to Interview Assistant! Go ahead and send me a message. &#x1F604; <br/>";
+  
+  msgText += `<button id="msg_init_btn">✅ Init </button>`;
+  msgText += `<button id="msg_quit_btn">❌ Quit </button>`;
+  appendBotMessage(BOT_NAME, BOT_IMG, "left", msgText);
+
+  const initBtn =  document.getElementById("msg_init_btn");
+  const quitBtn = get(".msg_quit_btn");
   initBtn.addEventListener("click", handleInitButtonClick);
 }
+
+
 
 
 function handleInitButtonClick(event) {
   event.preventDefault();
   requestQuestion();
 }
+
+
+socket.on("new_message", opponentResponse);
+
+function opponentResponse(msg) {
+  console.log("opponentResponse() called..");
+  console.log(`isInterviewer: ${isInterviewer}`);
+  const msgText = msg;
+  const delay = msg.split(" ").length * 100;
+
+  let text = msgText + "<br/>";
+  if(isInterviewer === "no") {
+    prev_question = msgText;
+  } else {
+    prev_answer = msgText;
+    text += `<button type="submit" id="follow-btn-${opponent_round}" value=true>✅ follow</button>`;
+    text += `<button type="submit" id="not-follow-btn-${opponent_round}" value=false>❌ not follow</button>`;  
+  }
+
+  setTimeout(() => {
+    appendOpponentMessage(opponentName, opponentImg, "left", text);
+    if(isInterviewer === "no") {
+      console.log("Interviewer Asked You..");
+    } else {
+      const follow_btn = document.getElementById(`follow-btn-${opponent_round}`);
+      const not_follow_btn = document.getElementById(`not-follow-btn-${opponent_round}`);
+      follow_btn.addEventListener("click", handleFollowBtnClick);
+      not_follow_btn.addEventListener("click", handleFollowBtnClick);
+    }
+    opponent_round++;
+    refreshRemaintime();
+  }, delay);  
+}
+
+
+
+
+
+
+
 
 
 
@@ -68,10 +174,9 @@ function handleMessageSubmit(event) {
   if (!msgText) return;
 
   socket.emit("new_message", msgerInput.value, roomName, () => {
-      appendMessage(PERSON_NAME, PERSON_IMG, "right", msgText);
+      appendMessage("You", yourImg, "right", msgText);
   });
   msgerInput.value = "";
-  // botResponse();
   refreshRemaintime();
 }
 
@@ -99,16 +204,6 @@ function appendMessage(name, img, side, text) {
 }
 
 
-function botResponse() {
-  const r = random(0, BOT_MSGS.length - 1);
-  const msgText = BOT_MSGS[r];
-  const delay = msgText.split(" ").length * 100;
-  
-  setTimeout(() => {
-    appendBotMessage(BOT_NAME, BOT_IMG, "left", msgText);
-    refreshRemaintime();
-  }, delay);
-}
 
 
 
@@ -121,11 +216,11 @@ function handleQuestionSubmit(event) {
   prev_question = questionValue;
 
   socket.emit("new_message", prev_question, roomName, () => {
-      appendMessage(PERSON_NAME, PERSON_IMG, "right", prev_question);
+      appendMessage(yourName, yourImg, "right", prev_question);
   });
 
   console.log(prev_question);
-  applicantResponse();
+  // opponentResponse(); -> wait Response
   refreshRemaintime();  
 }
 
@@ -172,29 +267,6 @@ function appendBotMessage(name, img, side, text) {
 
 
 
-/* Applicant */
-function applicantResponse() {
-  const r = random(0, APPLICANT_MSGS.length - 1);
-  const msgText = APPLICANT_MSGS[r];
-  // const delay = msgText.split(" ").length * 100;
-  const delay = random(1, 5) * 100;
-
-  prev_answer = msgText;
-  let text = msgText + "<br/>";
-  text += `<button type="submit" id="follow-btn-${applicant_round}" value=true>✅ follow</button>`;
-  text += `<button type="submit" id="not-follow-btn-${applicant_round}" value=false>❌ not follow</button>`;
-
-  setTimeout(() => {
-    appendApplicantMessage(APPLICANT_NAME, APPLICANT_IMG, "left", text);
-    const follow_btn = document.getElementById(`follow-btn-${applicant_round}`);
-    const not_follow_btn = document.getElementById(`not-follow-btn-${applicant_round}`);
-    
-    follow_btn.addEventListener("click", handleFollowBtnClick);
-    not_follow_btn.addEventListener("click", handleFollowBtnClick);
-    applicant_round++;
-    refreshRemaintime();
-  }, delay);  
-}
 
 function handleFollowBtnClick(event) {
   event.preventDefault();
@@ -202,11 +274,11 @@ function handleFollowBtnClick(event) {
   requestQuestion(prev_question, prev_answer, roomName, this.value); 
 }
 
-function appendApplicantMessage(name, img, side, text) {
+function appendOpponentMessage(name, img, side, text) {
   //   Simple solution for small apps
-  console.log("appendApplicantMessage() called");
+  console.log("appendOpponentMessage() called");
   
-  let msg_id = "applicant-" + applicant_round;  
+  let msg_id = "opponent-" + opponent_round;  
   const msgHTML = `
     <div class="msg ${side}-msg" id="${msg_id}">
       <div class="msg-img" style="background-image: url(${img})"></div>

@@ -9,6 +9,7 @@ html(lang="en")
         
     body        
       p(id="roomname", hidden='') #{roomname}
+      p(id="isInterviewer", hidden='') #{isInterviewer}
         
       section.msger
         header.msger-header
@@ -20,16 +21,16 @@ html(lang="en")
               i.fas.fa-cog
               p(id="remaintime") #{remaintime} min
         main.msger-chat
-          .msg.left-msg
-            .msg-img(style='background-image: url(https://www.svgrepo.com/show/285249/robot.svg)')
-            .msg-bubble
-              .msg-info
-                .msg-info-name Interview Assistant
-                .msg-info-time #{current_time}
-              .msg-text
-                | Hi, welcome to Interview Assistant! Go ahead and send me a message. &#x1F604; <br/>
-                button.msg_init_btn ✅ Init <br/>
-                button.msg_quit_btn ❌ Quit   
+        //-   .msg.left-msg
+        //-     .msg-img(style='background-image: url(https://www.svgrepo.com/show/285249/robot.svg)')
+        //-     .msg-bubble
+        //-       .msg-info
+        //-         .msg-info-name Interview Assistant
+        //-         .msg-info-time #{current_time}
+        //-       .msg-text
+        //-         | 
+        //-         button.msg_init_btn ✅ Init <br/>
+        //-         button.msg_quit_btn ❌ Quit   
         form.msger-inputarea
           input.msger-input(type='text' placeholder='Enter your message...')
           button.msger-send-btn(type='submit') Send

@@ -5,7 +5,6 @@ import express from "express";
 
 var request = require('request');
 
-
 const app = express();
 
 app.set("view engine", "pug");
@@ -19,23 +18,34 @@ app.use(express.json());
 app.get("/", (_, res) => res.render("home"));
 app.post("/chat", (req, res) => {
     console.log("Init ChatRoom")
+    const interview_id = req.body.roomname;
+    let interviewee_id;
+    
+    if(interview_id == "Rachel Lee") {
+        interviewee_id = "Rachel_Lee";
+    } else if(interview_id == "Daniel Manson") {
+        interviewee_id = "Daniel_Manson";
+    }
+
     const options = makeOption("PUT", "/model/interview_session/", {
-        interview_id: req.body.roomname,
-        interviewee_id: "Rachel_Lee",
+        interview_id: interview_id,
+        interviewee_id: interviewee_id,
+        position: req.body.position,
         tot_time: req.body.tottime,
     });
-    
+
     request(options, function(err, response, body) {
         if(err){
             console.log(err);
         }
         const msg = JSON.parse(body).msg;
         if(msg === "succeeded") {
-            console.log(`${req.body.roomname} Room Success! tot_time: ${req.body.tottime}`);
+            console.log(`${req.body.roomname} Room Success! tot_time: ${req.body.tottime}, isInterviewer: ${req.body.isInterviewer}`);
             res.render("simple_chat", { 
                 remaintime: req.body.tottime, 
                 roomname: req.body.roomname,
                 current_time: formatDate(new Date()),
+                isInterviewer: req.body.isInterviewer,
              });
         } else {
             console.log(`${req.body.roomname} Room Failed.. Please check your Backend server.`);
@@ -47,11 +57,11 @@ app.post("/chat", (req, res) => {
 app.get("/model/question/", (req, res) => {
 
     const options = makeOption("GET", "/model/question/", req.query);
-
     request(options, function(err, response, body) {
         if(err){
             console.log(err);
         }
+        console.log(body);
         let questions = JSON.parse(body);
         if(!isEmptyArr(questions)) {
             console.log(`Qeustion generation Success!`);
@@ -69,7 +79,6 @@ app.get("/model/question/", (req, res) => {
 app.get("/model/config/", (req, res) => {
 
     const options = makeOption("GET", "/model/config/", req.query);
-
     request(options, function(err, response, body) {
         if(err){
             console.log(err);
@@ -139,7 +148,7 @@ function publicRooms() {
 }
 
 wsServer.on("connection", (socket) => {
-    socket["nickname"] = "Anon";
+    socket["nickname"] = "You";
     socket.onAny((event) => {
         // console.log(wsServer.sockets.adapter);
         console.log(`Socket Event:${event}`);
@@ -148,18 +157,15 @@ wsServer.on("connection", (socket) => {
         socket.join(roomName);
         done();
         socket.to(roomName).emit("welcome", socket.nickname);
-        wsServer.sockets.emit("room_change", publicRooms());
     });
     socket.on("disconnecting", () => {
-        socket.rooms.forEach(room => socket.to(room).emit("bye", socket.nickname));
-        
+        socket.rooms.forEach(room => socket.to(room).emit("bye", socket.nickname));        
     }); 
     socket.on("disconnect", () => {
-        wsServer.sockets.emit("room_change", publicRooms());
     });
     socket.on("new_message", (msg, room, done) => {
         console.log(room);
-        socket.to(room).emit("new_message", `${socket.nickname}:${msg}`);
+        socket.to(room).emit("new_message", `${msg}`);
         done();
     });
     socket.on("nickname", (nickname) => socket["nickname"] = nickname);
