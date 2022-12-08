@@ -20,7 +20,7 @@ const BOT_IMG = "https://www.svgrepo.com/show/285249/robot.svg";
 const BOT_NAME = "Interview Assistant";
 
 const PERSON_IMGS = {
-  "interviewer" : "https://www.svgrepo.com/show/110198/boy.svg",
+  "interviewer" : "https://www.svgrepo.com/show/362184/user-male.svg",
   "default" : "https://www.svgrepo.com/show/135823/boy.svg",
   "Rachel Lee" : "https://www.svgrepo.com/show/156605/girl.svg",
   "Daniel Manson" : "https://www.svgrepo.com/show/12676/boy.svg",
@@ -98,12 +98,13 @@ function botInitResponse() {
   
   msgText += `<button id="msg_init_btn">✅ Init </button>&nbsp`;
   msgText += `<button id="msg_quit_btn">❌ Quit </button>`;
-  appendBotMessage(BOT_NAME, BOT_IMG, "left", msgText);
+  appendBotMessage(BOT_NAME, BOT_IMG, "right", msgText);
 
   const initBtn = document.getElementById("msg_init_btn");
   const quitBtn = document.getElementById("msg_quit_btn");
   initBtn.addEventListener("click", handleInitButtonClick);
   quitBtn.addEventListener("click", handleQuitButtonClick);
+  round++;
 }
 
 function handleQuitButtonClick(event) {
@@ -202,7 +203,7 @@ function appendMessage(name, img, side, text) {
   //   Simple solution for small apps
   let msg_id = "bot-" + round;
   const msgHTML = `
-    <div class="msg ${side}-msg" id="${msg_id}">
+    <div class="msg ${side}-msg choice" id="${msg_id}">
       <div class="msg-img" style="background-image: url(${img})"></div>
 
       <div class="msg-bubble">
@@ -282,10 +283,11 @@ function botQuestionResponse(questions) {
   const delay = random(1, 5) * 100;
 
   setTimeout(() => {
-    appendBotMessage(BOT_NAME, BOT_IMG, "left", msgText);
+    appendBotMessage(BOT_NAME, BOT_IMG, "right", msgText);
     const botForm = document.getElementById(`form-round${round}`);
     botForm.addEventListener("submit", handleQuestionSubmit); 
     addEventPagelist(round); 
+    round++;
   }, delay);
 }
 
@@ -296,7 +298,7 @@ function appendBotMessage(name, img, side, text) {
   
   let msg_id = "bot-" + round;  
   const msgHTML = `
-    <div class="msg ${side}-msg" id="${msg_id}">
+    <div class="msg ${side}-msg bot" id="${msg_id}">
       <div class="msg-img" style="background-image: url(${img})"></div>
 
       <div class="msg-bubble">
@@ -311,7 +313,6 @@ function appendBotMessage(name, img, side, text) {
 
   msgerChat.insertAdjacentHTML("beforeend", msgHTML);
   msgerChat.scrollTop += 500;
-
 }
 
 
@@ -631,7 +632,7 @@ function requestQuestion(question, answer, interview_id=roomName, is_follow_up=f
       finishInterview();
     }
   });
-  round++;
+  // round++;
 }
 
 
@@ -652,7 +653,7 @@ function finishInterview() {
     // const config = getConfig();
 
     setTimeout(() => {
-      appendBotMessage(BOT_NAME, BOT_IMG, "left", text);
+      appendBotMessage(BOT_NAME, BOT_IMG, "right", text);
       refreshRemaintime();
       if(round > 0) {
         getSummary();

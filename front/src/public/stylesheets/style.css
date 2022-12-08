@@ -350,6 +350,13 @@
     background-color: #ccc;
   }
 
+  div[id^="bot-"].bot > .msg-bubble  {
+    background-color: var(--left-msg-bg);
+    color: #000000;
+  }
+  
+
+
   div #wait-maker {
     align-items: 'center';
     text-align: 'center';
@@ -400,7 +407,7 @@
       border-radius: 10px;
       border: 1px solid rgba( 255, 255, 255, 0.18 );
       width: 80%;
-      height: 80%;
+      height: 70%;
       position: relative;
       top: -100px;
       padding: 10px;

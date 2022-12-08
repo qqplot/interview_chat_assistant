@@ -1,0 +1,8 @@
+body {
+    
+        /* background-image : url('https://cdn.pixabay.com/photo/2022/11/11/01/46/headland-7584031_1280.jpg'); */
+        background-image : url('/public/image/gsds.jpg');
+        background-repeat: no-repeat;
+        background-size: cover;
+    
+}
