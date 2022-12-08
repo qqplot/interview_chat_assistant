@@ -689,7 +689,9 @@ class Model2:
                 df_new[col] = 'model3'
             else : #나머지는 original question의 format을 따르도록
                 if self.picked_q_history[-1] in df['question'].to_list() :
-                    df_new[col] = q_row[col]
+                    # df_new[col] = q_row[col]
+                    if q_row[col]=='programmingskill' : df_new[col] = 'experience'
+                    else : df_new[col] = q_row[col]
                 elif col == 'section' : df_new[col] = 'unknown'
 
         self.q_initial_scored += df_new.to_dict(orient='records') # follow-up question의 follow-up question을 대비하여...
