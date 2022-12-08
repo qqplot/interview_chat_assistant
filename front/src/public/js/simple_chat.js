@@ -12,26 +12,8 @@ let questionList = [];
 let prev_question = "";
 let prev_answer = "none";
 let isFinished = false;
-
-const backend_url = "http://127.0.0.1:5000/";
-
-const BOT_MSGS = [
-  "Hi, how are you?",
-  "Ohh... I can't understand what you trying to say. Sorry!",
-  "I like to play games... But I don't know how to play!",
-  "Sorry if my answers are not relevant. :))",
-  "I feel sleepy! :("
-];
-
-const APPLICANT_MSGS = [
-  `Since graduating from college, I’ve had seven years of experience as a data scientist. 
-  My last role at Coopang was as a principal researcher focusing on data mining utilizing R and Stata to analyze consumer data. 
-  I was able to master my skills in interpreting data which would greatly benefit the team should I be granted the opportunity to work with you all. 
-  I hope to progress my career in the next few years by obtaining a PhD in data science and gaining more expertise in the growing field of data analytics. 
-  This next step in my career would allow me to gain experience in machine learning, analytics, and modeling in order to help the company achieve groundbreaking research in data mining.`,
-  `The most recent project I worked on was with a software company. 
-  My role in the project was to create and develop models then analyze customer data to create personalized product suggestions and narratives within the company's software platforms.`
-];
+let isWait = false;
+let summaryList = [];
 
 // Icons made by Freepik from www.flaticon.com
 const BOT_IMG = "https://www.svgrepo.com/show/285249/robot.svg";
@@ -45,7 +27,7 @@ const PERSON_IMGS = {
 };
 
 const PERSON_NAMES = {
-  "default" : "You",
+  "default" : "Anonymous",
   "Rachel Lee" : "Rachel Lee",
   "Daniel Manson" : "Daniel Manson",
   "interviewer" : "Interviewer",
@@ -59,7 +41,7 @@ let opponentName;
 
 
 socket.emit("enter_room", roomName, initRoom);
-
+socket.on("new_message", opponentResponse);
 
 /* Init */
 function initRoom() {
@@ -76,9 +58,14 @@ function initRoom() {
   switch(nickname) {
     case 'interviewer':  
       yourImg = PERSON_IMGS["interviewer"];
-      yourName = PERSON_NAMES["default"]; // You
-      opponentImg = PERSON_IMGS[roomName];
-      opponentName = PERSON_NAMES[roomName];
+      yourName = "You"; // You
+      let check_name = "default";
+      if(roomName === "Rachel Lee" || roomName === "Daniel Manson") {
+        check_name = roomName;
+      }
+    
+      opponentImg = PERSON_IMGS[check_name];
+      opponentName = roomName;
       break;
     case 'Rachel Lee':  
       yourImg = PERSON_IMGS['Rachel Lee'];
@@ -105,57 +92,86 @@ function initRoom() {
 }
 
 
+
 function botInitResponse() {
   let msgText = "Hi, welcome to Interview Assistant! Go ahead and send me a message. &#x1F604; <br/>";
   
-  msgText += `<button id="msg_init_btn">✅ Init </button>`;
+  msgText += `<button id="msg_init_btn">✅ Init </button>&nbsp`;
   msgText += `<button id="msg_quit_btn">❌ Quit </button>`;
   appendBotMessage(BOT_NAME, BOT_IMG, "left", msgText);
 
-  const initBtn =  document.getElementById("msg_init_btn");
-  const quitBtn = get(".msg_quit_btn");
+  const initBtn = document.getElementById("msg_init_btn");
+  const quitBtn = document.getElementById("msg_quit_btn");
   initBtn.addEventListener("click", handleInitButtonClick);
+  quitBtn.addEventListener("click", handleQuitButtonClick);
 }
 
-
+function handleQuitButtonClick(event) {
+  event.preventDefault();
+  const initBtn =  document.getElementById("msg_init_btn");
+  const quitBtn = document.getElementById("msg_quit_btn");
+  initBtn.setAttribute('disabled', 'disabled');
+  quitBtn.setAttribute('disabled', 'disabled');
+  alert("Quit. Thank you!!");
+  finishInterview();
+}
 
 
 function handleInitButtonClick(event) {
   event.preventDefault();
+  const initBtn =  document.getElementById("msg_init_btn");
+  const quitBtn = document.getElementById("msg_quit_btn");
+  initBtn.setAttribute('disabled', 'disabled');
+  quitBtn.setAttribute('disabled', 'disabled');
   requestQuestion();
 }
 
 
-socket.on("new_message", opponentResponse);
 
-function opponentResponse(msg) {
-  console.log("opponentResponse() called..");
-  console.log(`isInterviewer: ${isInterviewer}`);
+
+async function opponentResponse(msg) {
+  console.log(`opponentResponse() called.. isInterviewer: ${isInterviewer}`);
+
   const msgText = msg;
   const delay = msg.split(" ").length * 100;
 
+  const promise = new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve("done");
+    }, delay)
+  });
+  await promise;
+  if(isInterviewer === "yes") waitResponse(opponent_round);
+
+  let remaintime = document.getElementById("remaintime");
   let text = msgText + "<br/>";
   if(isInterviewer === "no") {
     prev_question = msgText;
   } else {
     prev_answer = msgText;
-    text += `<button type="submit" id="follow-btn-${opponent_round}" value=true>✅ follow</button>`;
-    text += `<button type="submit" id="not-follow-btn-${opponent_round}" value=false>❌ not follow</button>`;  
+    const time = remaintime.innerText.split(' ')[0];
+    if(time > 0) {
+      text += `<button type="submit" id="follow-btn-${opponent_round}" value=true>✅ follow</button>&nbsp`;
+      text += `<button type="submit" id="not-follow-btn-${opponent_round}" value=false>❌ not follow</button>`;  
+    }
   }
 
-  setTimeout(() => {
-    appendOpponentMessage(opponentName, opponentImg, "left", text);
-    if(isInterviewer === "no") {
-      console.log("Interviewer Asked You..");
-    } else {
-      const follow_btn = document.getElementById(`follow-btn-${opponent_round}`);
-      const not_follow_btn = document.getElementById(`not-follow-btn-${opponent_round}`);
+  appendOpponentMessage(opponentName, opponentImg, "left", text);  
+
+  if(isInterviewer === "no") {
+    console.log("Interviewer Asked You..");
+  } else {
+    const follow_btn = document.getElementById(`follow-btn-${opponent_round}`);
+    const not_follow_btn = document.getElementById(`not-follow-btn-${opponent_round}`);
+    if(!isEmpty(follow_btn)) {
       follow_btn.addEventListener("click", handleFollowBtnClick);
-      not_follow_btn.addEventListener("click", handleFollowBtnClick);
+      not_follow_btn.addEventListener("click", handleFollowBtnClick);      
+    } else {
+      finishInterview();
     }
-    opponent_round++;
-    refreshRemaintime();
-  }, delay);  
+  }
+  opponent_round++;
+  refreshRemaintime();
 }
 
 
@@ -177,6 +193,7 @@ function handleMessageSubmit(event) {
       appendMessage("You", yourImg, "right", msgText);
   });
   msgerInput.value = "";
+  this.setAttribute('disabled', 'disabled');
   refreshRemaintime();
 }
 
@@ -212,17 +229,49 @@ function appendMessage(name, img, side, text) {
 function handleQuestionSubmit(event) {
   event.preventDefault();
 
+  console.log("handleQuestionSubmit() called..");
+
   var questionValue = this.querySelector('input[name="questionValue"]:checked').value;
   prev_question = questionValue;
-
+  
   socket.emit("new_message", prev_question, roomName, () => {
       appendMessage(yourName, yourImg, "right", prev_question);
   });
 
   console.log(prev_question);
+  var submitBtn = this.querySelector('.submitBtn');
+
+  submitBtn.setAttribute('disabled', 'disabled');
+  document.getElementsByTagName('button');
   // opponentResponse(); -> wait Response
+  const delay = random(1, 5) * 300;
+  setTimeout(() => {
+    waitResponse(opponent_round);
+  }, delay);
+  
   refreshRemaintime();  
 }
+
+function waitResponse(id) {
+  
+  let text;
+  if(!isWait) {
+    isWait = true;
+    text = `<div class='wait-maker' style="text-align: center;">`;
+    text += `<img class="blinking" src="https://www.svgrepo.com/show/157949/microphone.svg" width="50" height="50" border="0"></img>`;
+    text += "</div>"
+    appendOpponentMessage(opponentName, opponentImg, "left", text);
+    return;
+  }
+  
+  let msg_id = "opponent-" + id;    
+
+  const msg_text = document.getElementById(msg_id);
+  // msg_text.style.display = 'none';
+  msg_text.remove();
+  isWait = false;
+}
+
 
 
 function botQuestionResponse(questions) {
@@ -271,14 +320,24 @@ function appendBotMessage(name, img, side, text) {
 function handleFollowBtnClick(event) {
   event.preventDefault();
   console.log("handleFollowBtnClick() called");
+
+  this.setAttribute('disabled', 'disabled');
+
+  let btnId = this.id;
+  if(this.value === "true") { // follow
+    btnId = "not-" + btnId;
+  } else {
+    btnId = btnId.substring(4);
+  }
+  document.getElementById(btnId).setAttribute('disabled', 'disabled');
   requestQuestion(prev_question, prev_answer, roomName, this.value); 
 }
 
 function appendOpponentMessage(name, img, side, text) {
   //   Simple solution for small apps
-  console.log("appendOpponentMessage() called");
-  
   let msg_id = "opponent-" + opponent_round;  
+  console.log(`appendOpponentMessage() called... msg_id: ${msg_id}`);
+
   const msgHTML = `
     <div class="msg ${side}-msg" id="${msg_id}">
       <div class="msg-img" style="background-image: url(${img})"></div>
@@ -322,13 +381,27 @@ function makeList(round) {
   for(let i = 0; i < questionList.length; i++) {
     list += `<li id="round${round}-order${questionList[i]['order']}">`;
     list += `<label class="question-label"><input type="radio" name="questionValue" value="${questionList[i]['question']}">`;
-    list += `<div class="question-item">`
-    list += `[${questionList[i]['section']}] ${questionList[i]['question']} (score: ${Math.round(questionList[i]['score'] * 100) / 100})`;
+    list += `<div class="question-item">`;
+
+    if(questionList[i]['score'] > 2000) {
+      list += `<b>[${questionList[i]['section']}]</b>&nbsp`;
+      list += `<button type="button" class="btn btn-danger">Follow-up</button>`;
+      list += "<br/>";
+    } else if(questionList[i]['score'] > 1000) {
+      list += `<b>[${questionList[i]['section']}]</b>&nbsp`;
+      list += `<button type="button" class="btn btn-primary">CV</button>&nbsp`;
+      list += `<button type="button" class="btn btn-success">JD</button>`;
+      list += "<br/>";
+    } else {
+      list += `<b>[${questionList[i]['section']}]</b><br/>`;
+    }
+    
+    list += ` ${questionList[i]['question']} (score: ${Math.round(questionList[i]['score'] * 100) / 100})`;
     list += `</div></label>`
     list += "</li>";    
   }
   list += "</ul>"
-  list += `<button type="submit">Submit</button>`;
+  list += `<button type="submit" class="submitBtn">Submit</button>`;
   list += "</form>";
   list += makePage(round);
   list += "</div>";
@@ -383,7 +456,7 @@ function addEventPagelist(round) {
     else pagination.innerHTML += `<li>•</li>`;
   }
   const paginationItems = pagination.getElementsByTagName(`li`);
-  console.log(paginationItems);
+  // console.log(paginationItems);
 
   const disableButton = (button) => {
     button.classList.add("disabled");
@@ -485,7 +558,7 @@ function addEventPagelist(round) {
 function refreshRemaintime() {
   console.log("refreshRemaintime() called");
   const remaintime = document.getElementById("remaintime");
-  console.log(remaintime.innerText);
+  console.log(`Remain time: ${remaintime.innerText}`);
 
   let url = "/model/config/";
   async function request() {
@@ -562,21 +635,184 @@ function requestQuestion(question, answer, interview_id=roomName, is_follow_up=f
 }
 
 
+
+
 function finishInterview() {
   console.log("finishInterview() called");
 
   if(!isFinished) {
     isFinished = true;
-    const msgText = "Interview is over. Thank you! 😀";
-    const delay = 1000;
+    let text = "Interview is over. Thank you! 😀<br/>";
+
+    if(round > 0) {
+      text += `<button id="btn-modal">📃 Your Summary</button>`;
+    }
     
+    const delay = 1000;
+    // const config = getConfig();
+
     setTimeout(() => {
-      appendBotMessage(BOT_NAME, BOT_IMG, "left", msgText);
+      appendBotMessage(BOT_NAME, BOT_IMG, "left", text);
       refreshRemaintime();
+      if(round > 0) {
+        getSummary();
+        const smryBtn = document.getElementById("btn-modal");
+        smryBtn.setAttribute('disabled', 'disabled');
+        smryBtn.addEventListener("click", handleGetSummaryBtn);
+
+      }
     }, delay);
     return;
   }
 
 }
 
+function getSummary() {
+  console.log("getSummary() called");
+  let url = "/model/summary/";
+  async function request() {
+    const response = await fetch(url,
+    {
+      method: 'GET',
+      Origin: 'http://localhost:3000'
+    });
+    return response;
+  }
+  const smryBtn = document.getElementById("btn-modal");
 
+  request()
+  .then(res => res.json())
+  .then(json => {    
+    if(json["ok"]) {
+      summaryList = json['data'];      
+      smryBtn.removeAttribute('disabled');
+      return summaryList;
+    } else {
+      console.log("getSummary() Failed...")
+    }
+  });
+
+}
+
+
+
+function getConfig() {
+  console.log("getConfig() called");
+  let url = "/model/config/";
+  async function request() {
+    const response = await fetch(url,
+    {
+      method: 'GET',
+      Origin: 'http://localhost:3000'
+    });
+    return response;
+  }
+  request()
+  .then(res => res.json())
+  .then(json => {    
+    if(json["ok"]) {
+      return json["data"];
+    } else {
+      console.log("getConfig() Failed...")
+    }
+});
+}
+
+
+
+
+function isEmpty(value) {
+  if( value == "" || value == null || value == undefined ){
+    return true
+  } else {
+    return false
+  }
+};
+
+
+function handleGetSummaryBtn(event) {
+  event.preventDefault();
+
+  const modalHTML = makeSummaryList();
+  const modal = document.getElementById("modal"); 
+  modal.innerHTML = modalHTML;
+
+  function modalOn() {
+    modal.style.display = "flex";
+  }
+
+  function isModalOn() {
+    return modal.style.display === "flex";
+  }
+
+  function modalOff() {
+    modal.style.display = "none";
+  }
+
+  const btnModal = document.getElementById("btn-modal");
+  btnModal.addEventListener("click", modalOn);
+
+  const closeBtn = modal.querySelector(".close-area");
+  closeBtn.addEventListener("click", modalOff);
+  modal.addEventListener("click", e => {
+    const evTarget = e.target
+    if(evTarget.classList.contains("modal-overlay")) {
+        modalOff();
+    }
+  });
+
+  window.addEventListener("keyup", e => {
+    if(isModalOn() && e.key === "Escape") {
+        modalOff();
+    }
+  });
+
+}
+
+
+
+
+function makeSummaryList() {
+  let list = "";
+  list += `<div class="modal-window">
+  <div class="title"> 
+    <h2> Interview Summary </h2>
+  </div>
+  <div class="close-area">X</div>
+  <div class="content">
+  `;
+
+  list += `<table class="summary-table" border="1">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+        <th scope="col">Content</th>
+        <th scope="col">Section</th>
+        <th scope="col">Source</th>
+        <th scope="col">Score</th>
+      </tr>
+    </thead><tbody>`;
+  for(let i = 0; i < summaryList.length; i++) {
+    if((i % 2) == 0) { // Question
+      list += `<tr>`;
+      list += `<th scope="row">Q</th>`;
+      list += `<td>${summaryList[i]["question"]}</td>`;
+      list += `<td>${summaryList[i]["section"]}</td>`;
+      list += `<td>${summaryList[i]["source"]}</td>`;
+      list += `<td>${Math.round(summaryList[i]["score"] * 100) / 100}</td>`;
+      list += "</tr>";
+    } else { //Answer
+      list += `<tr>`;
+      list += `<th scope="row">A</th>`;
+      list += `<td class="even">${summaryList[i]["answer"]}</td>`;
+      list += `<td class="even"></td>`;
+      list += `<td class="even"></td>`;
+      list += `<td class="even"></td>`;
+      list += "</tr>";
+    }        
+  }
+  list += "</tbody></table>"
+  list += "</div></div>";
+
+  return list;
+}

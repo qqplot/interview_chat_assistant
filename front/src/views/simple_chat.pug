@@ -34,6 +34,9 @@ html(lang="en")
         form.msger-inputarea
           input.msger-input(type='text' placeholder='Enter your message...')
           button.msger-send-btn(type='submit') Send
+        
+        div(id="modal" class="modal-overlay")
+
 
 script(src="/socket.io/socket.io.js")
 script(src="/public/js/simple_chat.js")

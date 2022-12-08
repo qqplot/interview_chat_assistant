@@ -23,7 +23,7 @@ app.post("/chat", (req, res) => {
     
     if(interview_id == "Rachel Lee") {
         interviewee_id = "Rachel_Lee";
-    } else if(interview_id == "Daniel Manson") {
+    } else {
         interviewee_id = "Daniel_Manson";
     }
 
@@ -74,6 +74,25 @@ app.get("/model/question/", (req, res) => {
 
 });
 
+
+app.get("/model/summary/", (req, res) => {
+
+    const options = makeOption("GET", "/model/summary/");
+    request(options, function(err, response, body) {
+        if(err){
+            console.log(err);
+        }
+        let summary = JSON.parse(body);
+        if(summary) {
+            console.log(`Model summary get!`);
+            res.json({ok: true, data: summary});
+        } else {
+            console.log(`Model summary get Failed..`);
+            res.status(404).send('not found');
+        }        
+    });
+
+});
 
 
 app.get("/model/config/", (req, res) => {
