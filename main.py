@@ -16,6 +16,8 @@ import io
 from contextlib import redirect_stdout, contextmanager
 import contextlib
 import pandas as pd
+import numpy as np
+import texttable
 
 from model1 import Model1
 from model2 import Model2
@@ -334,6 +336,13 @@ def after_request(response):
         logger.info('%s %s %s %s %s', request.remote_addr, request.method, request.scheme, request.full_path, response.status)
     else:
         logger.info('%s %s %s %s %s %s', request.remote_addr, request.method, request.scheme, request.full_path, response.status, response.data)
+        if request.path == '/model/question/':
+            tab = texttable.Texttable(max_width=80)
+            df_res = pd.DataFrame(response.json)
+            # tab.add_rows(df_res.values)
+            # tab.header(df_res.columns.values)
+            tab.add_rows(np.vstack([df_res.columns.values, df_res.values]))
+            logger.info('\n' + tab.draw())
     return response
 
 @contextmanager
