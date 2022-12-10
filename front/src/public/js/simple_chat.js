@@ -134,7 +134,7 @@ async function opponentResponse(msg) {
   console.log(`opponentResponse() called.. isInterviewer: ${isInterviewer}`);
 
   const msgText = msg;
-  const delay = msg.split(" ").length * 100;
+  const delay = msg.split(" ").length * 10;
 
   const promise = new Promise((resolve, reject) => {
     setTimeout(() => {
@@ -188,7 +188,11 @@ async function opponentResponse(msg) {
 function handleMessageSubmit(event) {
   event.preventDefault();
   const msgText = msgerInput.value;
-  if (!msgText) return;
+  if(!msgText) return;
+
+  if(msgText.trim() === "quit()") {
+    finishInterview(); 
+  }
 
   socket.emit("new_message", msgerInput.value, roomName, () => {
       appendMessage("You", yourImg, "right", msgText);
@@ -686,7 +690,10 @@ function getSummary() {
   .then(json => {    
     if(json["ok"]) {
       summaryList = json['data'];      
-      smryBtn.removeAttribute('disabled');
+
+      setTimeout(() => {
+        smryBtn.removeAttribute('disabled');
+      }, 5000);
       return summaryList;
     } else {
       console.log("getSummary() Failed...")
