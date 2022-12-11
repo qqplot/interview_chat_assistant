@@ -337,12 +337,15 @@ def after_request(response):
     else:
         logger.info('%s %s %s %s %s %s', request.remote_addr, request.method, request.scheme, request.full_path, response.status, response.data)
         if request.path == '/model/question/':
-            tab = texttable.Texttable(max_width=80)
-            df_res = pd.DataFrame(response.json)
-            # tab.add_rows(df_res.values)
-            # tab.header(df_res.columns.values)
-            tab.add_rows(np.vstack([df_res.columns.values, df_res.values]))
-            logger.info('\n' + tab.draw())
+            try:
+                tab = texttable.Texttable(max_width=80)
+                df_res = pd.DataFrame(response.json)
+                # tab.add_rows(df_res.values)
+                # tab.header(df_res.columns.values)
+                tab.add_rows(np.vstack([df_res.columns.values, df_res.values]))
+                logger.info('\n' + tab.draw())
+            except Exception as e:
+                print(f'(exception) {e}')
     return response
 
 @contextmanager
