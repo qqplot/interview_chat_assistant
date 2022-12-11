@@ -92,6 +92,18 @@ function initRoom() {
 }
 
 
+// update remain time every 10 secs
+// let timerId = setTimeout(function tick() {
+//   let remaintime = document.getElementById("remaintime");
+//   const time = remaintime.innerText.split(' ')[0];
+
+//   if(time === 0 || time === '0') {
+//     return;
+//   }
+//   refreshRemaintime();
+//   timerId = setTimeout(tick, 10000);
+// }, 10000);
+
 
 function botInitResponse() {
   let msgText = "Hi, welcome to Interview Assistant! Go ahead and send me a message. &#x1F604; <br/>";
@@ -145,12 +157,13 @@ async function opponentResponse(msg) {
   if(isInterviewer === "yes") waitResponse(opponent_round);
 
   let remaintime = document.getElementById("remaintime");
+  const time = remaintime.innerText.split(' ')[0];
+
   let text = msgText + "<br/>";
   if(isInterviewer === "no") {
     prev_question = msgText;
   } else {
-    prev_answer = msgText;
-    const time = remaintime.innerText.split(' ')[0];
+    prev_answer = msgText;  
     if(time > 0) {
       text += `<button type="submit" id="follow-btn-${opponent_round}" value=true>✅ follow</button>&nbsp`;
       text += `<button type="submit" id="not-follow-btn-${opponent_round}" value=false>❌ not follow</button>`;  
@@ -172,8 +185,20 @@ async function opponentResponse(msg) {
     }
   }
   opponent_round++;
-  refreshRemaintime();
+  // refreshRemaintime();
+
+  if(time === 0 || time === '0') {
+    return;
+  }
+  console.log(`Remain time: ${time} min`);
+  remaintime.innerText = (time - 2) + ' min';
+  remaintime.classList.remove("effect");
+  void remaintime.offsetWidth;
+  remaintime.classList.add("effect");
+
+
 }
+
 
 
 

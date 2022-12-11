@@ -61,7 +61,7 @@ app.get("/model/question/", (req, res) => {
         if(err){
             console.log(err);
         }
-        console.log(body);
+        // console.log(body);
         let questions = JSON.parse(body);
         if(!isEmptyArr(questions)) {
             console.log(`Qeustion generation Success!`);
