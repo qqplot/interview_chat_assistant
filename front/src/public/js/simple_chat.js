@@ -413,11 +413,11 @@ function makeList(round) {
     list += `<label class="question-label"><input type="radio" name="questionValue" value="${questionList[i]['question']}">`;
     list += `<div class="question-item">`;
 
-    if(questionList[i]['score'] > 2000) {
+    if(questionList[i]['score'] > 32) {
       list += `<b>[${questionList[i]['section']}]</b>&nbsp`;
       list += `<button type="button" class="btn btn-danger">Follow-up</button>`;
       list += "<br/>";
-    } else if(questionList[i]['score'] > 1000) {
+    } else if(questionList[i]['score'] > 16) {
       list += `<b>[${questionList[i]['section']}]</b>&nbsp`;
       list += `<button type="button" class="btn btn-primary">CV</button>&nbsp`;
       list += `<button type="button" class="btn btn-success">JD</button>`;

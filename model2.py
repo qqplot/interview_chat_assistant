@@ -5,8 +5,8 @@ import sqlite3
 from sentence_transformers import SentenceTransformer  #sentence_transformers 설치 필요
 # from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline #transformers 설치필요 #자동 응답용
 
-PRIORITYSCORE_FOR_CVJD = 1000 #cvjd base question을 상단에 올리는 데에 사용됨(score에 가산)
-PRIORITYSCORE_FOR_FOLLOWUP = 2000 #follow up question을 상단에 올리는 데에 사용됨(score에 가산)
+PRIORITYSCORE_FOR_CVJD = 16 #cvjd base question을 상단에 올리는 데에 사용됨(score에 가산)
+PRIORITYSCORE_FOR_FOLLOWUP = 32 #follow up question을 상단에 올리는 데에 사용됨(score에 가산)
 
 
 class Model2:
@@ -684,7 +684,7 @@ class Model2:
             if col == 'question': pass #기입력하였음
             elif col == 'score' : #score는 상단에 위치할 수 있도록 부여
                 for i in range(len(df_new[col])) :
-                    df_new[col][i] = PRIORITYSCORE_FOR_FOLLOWUP + ( len(df_new[col]) - i ) #score는 상단에 위치할 수 있도록 부여
+                    df_new[col][i] = PRIORITYSCORE_FOR_FOLLOWUP + ( len(df_new[col]) - i ) + np.random.rand() #score는 상단에 위치할 수 있도록 부여
             elif col == 'source' : #source 표기
                 df_new[col] = 'model3'
             else : #나머지는 original question의 format을 따르도록
